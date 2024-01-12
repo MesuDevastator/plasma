@@ -1,0 +1,6 @@
+[submodule "lib/breakpad"]
+	path = lib/breakpad
+	url = https://github.com/google/breakpad.git
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = https://github.com/fmtlib/fmt.git
