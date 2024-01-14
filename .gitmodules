@@ -4,3 +4,6 @@
 [submodule "lib/fmt"]
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/dobby"]
+	path = lib/dobby
+	url = https://github.com/jmpews/Dobby.git

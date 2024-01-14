@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,10 +22,18 @@
 
 #pragma once
 
-const char* g_release_version{ "@RELEASE_VERSION@" };
+#include "interface/interface_manager.hpp"
 
-const char* g_branch_name{ "@BRANCH_NAME@" };
-
-const char* g_commit_hash{ "@COMMIT_HASH@" };
-
-const char* g_compile_time{ "@COMPILE_TIME@" };
+namespace plasma::module
+{
+    class module
+    {
+    public:
+        virtual const char* get_name() const noexcept = 0;
+        virtual void initialize(interface::interface_manager& interface_manager) = 0;
+        virtual void uninitialize(interface::interface_manager& interface_manager) = 0;
+        virtual ~module()
+        {
+        }
+    };
+}

@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,10 +22,26 @@
 
 #pragma once
 
-const char* g_release_version{ "@RELEASE_VERSION@" };
+#include <fmt/format.h>
+#include <exception>
 
-const char* g_branch_name{ "@BRANCH_NAME@" };
+#include "hook.hpp"
 
-const char* g_commit_hash{ "@COMMIT_HASH@" };
+namespace plasma::hook
+{
+    class hook_error : public std::exception
+    {
+    private:
+        std::string message;
+    public:
+        hook_error(const hook& hook, bool install) :
+            message{ fmt::format("Failed to {} hook at {:#x} by {}", install ? "install" : "uninstall", (std::size_t)hook.get_function(), hook.get_hooker()) }
+        {
+        }
 
-const char* g_compile_time{ "@COMPILE_TIME@" };
+        const char* what() const noexcept override
+        {
+            return message.c_str();
+        }
+    };
+}

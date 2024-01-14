@@ -22,6 +22,7 @@ cmake_minimum_required(VERSION 3.27)
 project(Plasma CXX)
 
 add_subdirectory(./lib/fmt)
+add_subdirectory(./lib/dobby)
 
 set(CMAKE_CXX_STANDARD 23)
 set(RELEASE_VERSION "0.1a")
@@ -30,24 +31,25 @@ set(COMMIT_HASH "")
 # NOTE: Regenerate CMake build files every build,
 #       otherwise COMPILE_TIME will not be changed (might get fixed).
 set(COMPILE_TIME "")
+set(Boost_USE_STATIC_LIBS ON)
 
 find_package(Boost COMPONENTS log program_options REQUIRED)
 find_package(Git REQUIRED)
 
 if (GIT_FOUND)
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} symbolic-ref --short -q HEAD
-            OUTPUT_VARIABLE BRANCH_NAME
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            ERROR_QUIET
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ${GIT_EXECUTABLE} symbolic-ref --short -q HEAD
+        OUTPUT_VARIABLE BRANCH_NAME
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} log -1 --pretty=format:%H
-            OUTPUT_VARIABLE COMMIT_HASH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            ERROR_QUIET
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND ${GIT_EXECUTABLE} log -1 --pretty=format:%h
+        OUTPUT_VARIABLE COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif ()
 
@@ -62,17 +64,32 @@ string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
 
 message(STATUS "Plasma version: ${RELEASE_VERSION} ${BRANCH_NAME}:${COMMIT_HASH} (${COMPILE_TIME})")
 configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/version.h.ini"
-        "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
-        @ONLY
+    "version.h.ini"
+    "version.h"
+    @ONLY
 )
 
-set(SRC_LIST
-        main.cpp
-        plasma/log.hpp)
+add_custom_target(build-breakpad ALL
+    COMMAND make
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/breakpad
+    COMMENT "Build breakpad"
+)
+add_library(breakpad-client STATIC IMPORTED)
+set_property(TARGET breakpad-client APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+set_target_properties(breakpad-client PROPERTIES IMPORTED_LOCATION_NOCONFIG "${CMAKE_CURRENT_SOURCE_DIR}/lib/breakpad/src/client/linux/libbreakpad_client.a")
+add_dependencies(breakpad-client build-breakpad)
 
-add_executable(Plasma ${SRC_LIST})
-add_dependencies(Plasma fmt::fmt)
-target_include_directories(Plasma PUBLIC ./lib/fmt/include)
-target_link_directories(Plasma PUBLIC ${FMT_BINARY_DIR})
-target_link_libraries(Plasma ${Boost_LIBRARIES})
+add_executable(Plasma
+    main.cpp
+    plasma/log.hpp
+    plasma/crash_report/crash_reporter.hpp
+    plasma/hook/hook_error.hpp
+    plasma/hook/hook_manager.hpp
+    plasma/module/interface/interface_manager.hpp
+    plasma/module/interface/interface.hpp
+    plasma/module/module_manager.hpp
+    plasma/module/module.hpp
+)
+add_dependencies(Plasma fmt::fmt breakpad-client dobby_static)
+target_include_directories(Plasma PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt/include ${CMAKE_CURRENT_SOURCE_DIR}/lib/breakpad/src ${CMAKE_CURRENT_SOURCE_DIR}/lib/dobby/include)
+target_link_libraries(Plasma ${Boost_LIBRARIES} fmt::fmt breakpad-client dobby_static)

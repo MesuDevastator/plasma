@@ -34,6 +34,9 @@
 #include <boost/log/support/date_time.hpp>
 
 #include "plasma/log.hpp"
+#include "plasma/crash_report/crash_reporter.hpp"
+#include "plasma/hook/hook_manager.hpp"
+#include "plasma/module/module_manager.hpp"
 
 #include "version.h"
 
@@ -52,8 +55,7 @@ int main(const int argc, const char* argv[])
 {
 	std::cout << plasma_logo << "Plasma " << g_release_version << std::endl
 		<< "  - git " << g_branch_name << ":" << g_commit_hash << std::endl
-		<< "  - cts " << g_compile_time << std::endl
-		<< "  - boost " << g_boost_library_version << std::endl;
+		<< "  - cts " << g_compile_time << std::endl;
 
 	boost::log::add_common_attributes();
 	auto sink{ boost::make_shared<boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>>() };
@@ -80,31 +82,26 @@ int main(const int argc, const char* argv[])
 	// TODO: Fill description of the options
 	boost::program_options::options_description desc{ "[Plasma] Usage" };
 	desc.add_options()
-		("help", "Show the help");
-		("");
+		("help", "Show the help")
+		("init", "Initialize configurations only");
 	boost::program_options::variables_map vm{};
 	try
 	{
-		try
-		{
-			store(boost::program_options::parse_command_line(argc, argv, desc), vm);
-			notify(vm);
-		}
-		catch (const std::exception& e)
-		{
-			FTL(lg) << "Failed to parse command line: " << e.what();
-			return 1;
-		}
-		if (vm.count("help"))
-		{
-			std::cerr << desc << std::endl;
-			return 1;
-		}
+		store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+		notify(vm);
 	}
 	catch (const std::exception& e)
 	{
-		FTL(lg) << "Failed to start plasma: " << e.what();
+		FTL(lg) << "Failed to parse command line: " << e.what();
 		return 1;
 	}
+	if (vm.count("help"))
+	{
+		std::cerr << desc << std::endl;
+		return 1;
+	}
+	plasma::module::module_manager module_manager{};
+	module_manager.load_module(std::unique_ptr<plasma::module::module>{ new plasma::crash_report::crash_reporter{} });
+	module_manager.load_module(std::unique_ptr<plasma::module::module>{ new plasma::hook::hook_manager{} });
 	return 0;
 }
