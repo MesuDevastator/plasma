@@ -22,26 +22,25 @@
 
 #pragma once
 
-#include <fmt/format.h>
 #include <exception>
+#include <string>
+#include <fmt/format.h>
 
-#include "hook.hpp"
-
-namespace plasma::hook
+namespace plasma::plugin::exception
 {
-    class hook_error : public std::exception
+    class plugin_loading_exception : public std::exception
     {
     private:
-        std::string message;
+        const std::string error_message;
     public:
-        hook_error(const hook& hook, bool install) :
-            message{ fmt::format("Failed to {} hook at {:#x} by {}", install ? "install" : "uninstall", (std::size_t)hook.get_function(), hook.get_hooker()) }
+        plugin_loading_exception(const char* plugin_name) noexcept :
+            error_message{ fmt::format("Failed to load plugin: {}", plugin_name) }
         {
         }
 
         const char* what() const noexcept override
         {
-            return message.c_str();
+            return error_message.c_str();
         }
     };
 }

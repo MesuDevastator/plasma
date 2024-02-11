@@ -1,9 +1,15 @@
-[submodule "lib/breakpad"]
-	path = lib/breakpad
-	url = https://github.com/google/breakpad.git
 [submodule "lib/fmt"]
 	path = lib/fmt
 	url = https://github.com/fmtlib/fmt.git
 [submodule "lib/dobby"]
 	path = lib/dobby
 	url = https://github.com/jmpews/Dobby.git
+[submodule "lib/mimalloc"]
+	path = lib/mimalloc
+	url = https://github.com/microsoft/mimalloc.git
+[submodule "lib/cxx_detect"]
+	path = lib/cxx_detect
+	url = https://github.com/cxxstuff/cxx_detect.git
+[submodule "lib/boost"]
+	path = lib/boost
+	url = https://github.com/boostorg/boost.git

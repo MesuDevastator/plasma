@@ -22,18 +22,34 @@
 
 #pragma once
 
-#include "interface/interface_manager.hpp"
+#include <map>
+#include <memory>
 
-namespace plasma::module
+#include "plugin.hpp"
+#include "exception/plugin_loading_exception.hpp"
+
+namespace plasma::plugin
 {
-    class module
+    class plugin_manager
     {
+    private:
+        std::map<const char*, std::unique_ptr<plugin>> plugins_;
     public:
-        virtual const char* get_name() const noexcept = 0;
-        virtual void initialize(interface::interface_manager& interface_manager) = 0;
-        virtual void uninitialize(interface::interface_manager& interface_manager) = 0;
-        virtual ~module()
+        plugin_manager() = default;
+        void load_plugin(plugin* plugin)
         {
+            if (plugins_.contains(plugin->get_name()))
+            {
+                throw exception::plugin_loading_exception{ plugin->get_name() };
+            }
+            plugin->initialize(*this);
+            plugins_.insert({ plugin->get_name(), std::unique_ptr<class plugin>{ plugin } });
+        }
+
+        auto unload_plugin(const char* name)
+        {
+            return plugins_.erase(name);
         }
     };
 }
+

@@ -22,10 +22,16 @@
 
 #pragma once
 
-const char* g_release_version{ "@RELEASE_VERSION@" };
+#include <fmt/format.h>
 
-const char* g_branch_name{ "@BRANCH_NAME@" };
+const auto g_release_version{ "@RELEASE_VERSION@" };
 
-const char* g_commit_hash{ "@COMMIT_HASH@" };
+const auto g_branch_name{ "@BRANCH_NAME@" };
 
-const char* g_compile_time{ "@COMPILE_TIME@" };
+const auto g_commit_hash{ "@COMMIT_HASH@" };
+
+const auto g_compile_time{ "@COMPILE_TIME@" };
+
+const auto g_full_version_string{
+    fmt::format("Plasma {} [git {}:{}]", g_release_version, g_branch_name, g_commit_hash)
+};

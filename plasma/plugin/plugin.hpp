@@ -22,12 +22,18 @@
 
 #pragma once
 
-namespace plasma::module::interface
+#include "plugin_manager.hpp"
+
+namespace plasma::plugin
 {
-    class interface
+    class plugin
     {
     public:
-        virtual const char* get_name() const noexcept = 0;
-        virtual ~interface() = 0;
+        virtual const char* get_name() noexcept = 0;
+        virtual void initialize(plugin_manager&) = 0;
+        virtual ~plugin()
+        {
+        }
     };
 }
+

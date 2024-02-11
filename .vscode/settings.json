@@ -83,6 +83,10 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "*.ipp": "cpp",
+        "*.in": "cpp",
+        "csetjmp": "cpp",
+        "csignal": "cpp"
     }
 }
