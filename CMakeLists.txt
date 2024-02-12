@@ -22,7 +22,6 @@ cmake_minimum_required(VERSION 3.27)
 project(Plasma CXX)
 
 add_subdirectory(./lib/fmt)
-add_subdirectory(./lib/dobby)
 add_subdirectory(./lib/mimalloc)
 add_subdirectory(./lib/boost)
 

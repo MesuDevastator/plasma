@@ -34,6 +34,10 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/support/date_time.hpp>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <version.hpp>
 
 #include "plasma/log.hpp"
@@ -48,28 +52,91 @@ namespace
         "██║     ███████╗██║  ██║███████║██║ ╚═╝ ██║██║  ██║\n"
         "╚═╝     ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚═╝  ╚═╝\n" };
 
+#if !defined(NDEBUG) || defined(_DEBUG)
+    auto formatter{
+        boost::log::expressions::format("[%1%] [%2%:%3%] [%4%]: %5%")
+        % boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
+        % boost::log::expressions::attr<const char*>("File")
+        % boost::log::expressions::attr<int>("Line")
+        % boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity")
+        % boost::log::expressions::message
+    };
+#else
+    auto formatter{
+        boost::log::expressions::format("[%1%] [%2%]: %3%")
+        % boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
+        % boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity")
+        % boost::log::expressions::message
+    };
+#endif
+
+#ifdef _WIN32
+    bool enable_ansi_escape_sequence()
+    {
+        HANDLE handle_stderr{ GetStdHandle(STD_ERROR_HANDLE) };
+        if (handle_stderr == INVALID_HANDLE_VALUE)
+        {
+            return false;
+        }
+
+        DWORD mode{};
+        if (!GetConsoleMode(handle_stderr, &mode))
+        {
+            return false;
+        }
+
+        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(handle_stderr, mode))
+        {
+            return false;
+        }
+        return true;
+    }
+#endif
+
+    bool color_enabled{ true };
+
+    void color_formatter(boost::log::record_view const& rec, boost::log::formatting_ostream& strm)
+    {
+        auto severity{ rec[boost::log::trivial::severity] };
+        if (severity && color_enabled)
+        {
+            switch (severity.get())
+            {
+            case boost::log::trivial::severity_level::trace:
+                strm << "\x1b[0;90m";
+                break;
+            case boost::log::trivial::severity_level::debug:
+                strm << "\x1b[0;37m";
+                break;
+            case boost::log::trivial::severity_level::info:
+                strm << "\x1b[0;37m";
+                break;
+            case boost::log::trivial::severity_level::warning:
+                strm << "\x1b[0;33m";
+                break;
+            case boost::log::trivial::severity_level::error:
+                strm << "\x1b[0;31m";
+                break;
+            case boost::log::trivial::severity_level::fatal:
+                strm << "\x1b[0;91m";
+                break;
+            default:
+                break;
+            }
+        }
+        formatter(rec, strm);
+        if (severity && color_enabled)
+        {
+            strm << "\x1b[0m";
+        }
+    }
+
     void initialize_logging_system()
     {
         boost::log::add_common_attributes();
-#if !defined(NDEBUG) || defined(_DEBUG)
-        auto formatter{
-            boost::log::expressions::format("[%1%] [%2%:%3%] [%4%]: %5%")
-            % boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
-            % boost::log::expressions::attr<const char*>("File")
-            % boost::log::expressions::attr<int>("Line")
-            % boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity")
-            % boost::log::expressions::message
-        };
-#else
-        auto formatter{
-            boost::log::expressions::format("[%1%] [%2%]: %3%")
-            % boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S")
-            % boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity")
-            % boost::log::expressions::message
-        };
-#endif
         auto console_sink{ boost::make_shared<boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>>() };
-        console_sink->set_formatter(formatter);
+        console_sink->set_formatter(&color_formatter);
         console_sink->locked_backend()->add_stream(plasma::log::clog_stream_ptr);
 
         std::filesystem::create_directory("./logs");
@@ -88,6 +155,14 @@ namespace
         boost::log::core::get()->add_thread_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
         boost::log::core::get()->add_sink(console_sink);
         boost::log::core::get()->add_sink(file_sink);
+#ifdef _WIN32
+        if (!enable_ansi_escape_sequence())
+        {
+            color_enabled = false;
+            logger lg{};
+            WRN(lg) << "Failed to enable Win32 ANSI escape sequence support, colorful console output will be disabled";
+        }
+#endif
     }
 }
 
@@ -106,7 +181,8 @@ int main(const int argc, const char* argv[])
     boost::program_options::options_description desc{ "Plasma: Usage" };
     desc.add_options()
         ("help", "Show the help")
-        ("init", "Initialize configurations only");
+        ("init", "Initialize configurations only")
+        ("no-color", "Disable colorful log output");
     boost::program_options::variables_map vm{};
     try
     {
@@ -122,6 +198,10 @@ int main(const int argc, const char* argv[])
     {
         std::cerr << desc << std::endl;
         return 1;
+    }
+    if (vm.count("no-color"))
+    {
+        color_enabled = false;
     }
     return 0;
 }
