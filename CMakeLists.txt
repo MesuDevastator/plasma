@@ -20,6 +20,7 @@
 
 cmake_minimum_required(VERSION 3.27)
 project(Plasma CXX)
+set(BUILD_SHARED_LIBS ON)
 
 add_subdirectory(./lib/fmt)
 add_subdirectory(./lib/mimalloc)
@@ -29,7 +30,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(RELEASE_VERSION "0.1a")
 set(BRANCH_NAME "")
 set(COMMIT_HASH "")
-set(COMPILE_TIME "")
+
 
 # add_compile_definitions(PLASMA_NOLOGO)
 
@@ -52,25 +53,21 @@ if (GIT_FOUND)
     )
 endif ()
 
-string(TIMESTAMP COMPILE_TIME "%Y-%m-%d %H:%M:%S UTC" UTC)
-
-message(STATUS "Plasma version: ${RELEASE_VERSION} ${BRANCH_NAME}:${COMMIT_HASH} (${COMPILE_TIME})")
+message(STATUS "Plasma version: ${RELEASE_VERSION} ${BRANCH_NAME}:${COMMIT_HASH}")
 configure_file(version.hpp.in version.hpp @ONLY)
 
+file(GLOB_RECURSE PLASMA_SRCS "include/*.h" "include/*.hpp" "src/*.cpp")
+message(STATUS "Plasma sources: ${PLASMA_SRCS}")
 add_executable(Plasma
     main.cpp
-    plasma/plugin/exception/plugin_loading_exception.hpp
-    plasma/plugin/plugin_manager.hpp
-    plasma/plugin/plugin.hpp
-    plasma/log.hpp
+    ${PLASMA_SRCS}
 )
-add_dependencies(Plasma Boost::log Boost::program_options fmt::fmt mimalloc)
+add_dependencies(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc-static)
 target_include_directories(Plasma PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/fmt/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/breakpad/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/dobby/include
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/cxx_detect
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
 )
-target_link_libraries(Plasma Boost::log Boost::program_options fmt::fmt mimalloc)
+target_link_libraries(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc-static)

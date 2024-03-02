@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,21 +22,39 @@
 
 #pragma once
 
-#include <chrono>
-#include <fmt/format.h>
+#include <filesystem>
 
-const auto g_release_version{ "@RELEASE_VERSION@" };
+#include <plasma/config/config.h>
 
-const auto g_branch_name{ "@BRANCH_NAME@" };
+namespace plasma::config
+{
+    class plasma_config : public config
+    {
+    private:
+        std::filesystem::path file_path_;
+    public:
+        class
+        {
+        public:
+            bool color_enabled;
+        } logging;
 
-const auto g_commit_hash{ "@COMMIT_HASH@" };
+        class
+        {
+        public:
+            class
+            {
+            public:
+                std::filesystem::path base_dir;
+                std::filesystem::path backup_dir;
+            } storage;
+            std::string name;
+        } world;
 
-const auto g_build_date{ __DATE__ };
+        plasma_config() noexcept;
 
-const auto g_full_version_string{
-#if !defined(NDEBUG) || defined(_DEBUG)
-    fmt::format("Plasma {} [git {}:{}] [debug]", g_release_version, g_branch_name, g_commit_hash)
-#else
-    fmt::format("Plasma {} [git {}:{}]", g_release_version, g_branch_name, g_commit_hash)
-#endif
-};
+        void load() override;
+
+        void save() override;
+    };
+}

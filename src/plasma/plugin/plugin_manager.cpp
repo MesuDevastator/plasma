@@ -20,20 +20,39 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include <map>
+#include <memory>
 
-#include "plugin_manager.hpp"
+#include <plasma/log.hpp>
+#include <plasma/plugin/plugin.h>
+
+#include <plasma/plugin/plugin_manager.h>
 
 namespace plasma::plugin
 {
-    class plugin
+    plugin_manager::plugin_manager() = default;
+
+    bool plugin_manager::load_plugin(plugin* plugin)
     {
-    public:
-        virtual const char* get_name() noexcept = 0;
-        virtual void initialize(plugin_manager&) = 0;
-        virtual ~plugin()
+        plasma::log::logger lg{};
+        TRC(lg) << "Loading plugin " << plugin->get_name() << " " << plugin->get_version();
+        if (plugins_.contains(plugin->get_name()))
         {
+            return false;
         }
-    };
+        plugin->initialize(*this);
+        plugins_.insert({ plugin->get_name(), std::unique_ptr<class plugin>{ plugin } });
+        return true;
+    }
+
+    std::size_t plugin_manager::unload_plugin(const char* name)
+    {
+        return plugins_.erase(name);
+    }
+
+    const std::unique_ptr<plugin>& plugin_manager::get_plugin(const char* name) const
+    {
+        return plugins_.at(name);
+    }
 }
 

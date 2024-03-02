@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -20,23 +20,15 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include <plasma/config/config.h>
 
-#include <chrono>
-#include <fmt/format.h>
-
-const auto g_release_version{ "@RELEASE_VERSION@" };
-
-const auto g_branch_name{ "@BRANCH_NAME@" };
-
-const auto g_commit_hash{ "@COMMIT_HASH@" };
-
-const auto g_build_date{ __DATE__ };
-
-const auto g_full_version_string{
-#if !defined(NDEBUG) || defined(_DEBUG)
-    fmt::format("Plasma {} [git {}:{}] [debug]", g_release_version, g_branch_name, g_commit_hash)
-#else
-    fmt::format("Plasma {} [git {}:{}]", g_release_version, g_branch_name, g_commit_hash)
-#endif
-};
+namespace plasma::config
+{
+    void config::save()
+    {
+    }
+    config::~config()
+    {
+        save();
+    }
+}

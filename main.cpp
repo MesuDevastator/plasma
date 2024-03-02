@@ -40,7 +40,11 @@
 
 #include <version.hpp>
 
-#include "plasma/log.hpp"
+#include <plasma/log.hpp>
+#include <plasma/plugin/plugin_manager.h>
+#include <plasma/plasma_server.h>
+
+bool g_color_enabled{ true };
 
 namespace
 {
@@ -94,20 +98,16 @@ namespace
     }
 #endif
 
-    bool color_enabled{ true };
-
     void color_formatter(boost::log::record_view const& rec, boost::log::formatting_ostream& strm)
     {
         auto severity{ rec[boost::log::trivial::severity] };
-        if (severity && color_enabled)
+        if (severity && g_color_enabled)
         {
             switch (severity.get())
             {
             case boost::log::trivial::severity_level::trace:
-                strm << "\x1b[0;90m";
-                break;
             case boost::log::trivial::severity_level::debug:
-                strm << "\x1b[0;37m";
+                strm << "\x1b[0;90m";
                 break;
             case boost::log::trivial::severity_level::info:
                 strm << "\x1b[0;37m";
@@ -126,7 +126,7 @@ namespace
             }
         }
         formatter(rec, strm);
-        if (severity && color_enabled)
+        if (severity && g_color_enabled)
         {
             strm << "\x1b[0m";
         }
@@ -150,7 +150,11 @@ namespace
         file_sink->set_formatter(formatter);
         file_sink->locked_backend()->set_file_collector(boost::log::sinks::file::make_collector(boost::log::keywords::target = "./logs"));
         file_sink->locked_backend()->scan_for_files();
+#if !defined(NDEBUG) || defined(_DEBUG)
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+#else
+        boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+#endif
         boost::log::core::get()->add_thread_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
         boost::log::core::get()->add_thread_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
         boost::log::core::get()->add_sink(console_sink);
@@ -158,7 +162,7 @@ namespace
 #ifdef _WIN32
         if (!enable_ansi_escape_sequence())
         {
-            color_enabled = false;
+            g_color_enabled = false;
             logger lg{};
             WRN(lg) << "Failed to enable Win32 ANSI escape sequence support, colorful console output will be disabled";
         }
@@ -168,6 +172,11 @@ namespace
 
 int main(const int argc, const char* argv[])
 {
+#ifdef _WIN32
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+    setlocale(LC_ALL, ".utf-8");
 #ifndef PLASMA_NOLOGO
     std::cout << plasma_logo;
 #endif
@@ -178,11 +187,18 @@ int main(const int argc, const char* argv[])
 
     INF(lg) << g_full_version_string;
 
+    {
+        std::stringstream ss{};
+        for (int i{}; i < argc; ++i)
+        {
+            ss << argv[i] << " ";
+        }
+        DBG(lg) << "Console argument: " << ss.str();
+    }
     boost::program_options::options_description desc{ "Plasma: Usage" };
     desc.add_options()
         ("help", "Show the help")
-        ("init", "Initialize configurations only")
-        ("no-color", "Disable colorful log output");
+        ("init", "Initialize configurations only");
     boost::program_options::variables_map vm{};
     try
     {
@@ -194,14 +210,14 @@ int main(const int argc, const char* argv[])
         FTL(lg) << "Failed to parse command line: " << e.what();
         return 1;
     }
+
     if (vm.count("help"))
     {
         std::cerr << desc << std::endl;
         return 1;
     }
-    if (vm.count("no-color"))
-    {
-        color_enabled = false;
-    }
+
+    plasma::plugin::plugin_manager manager{};
+    manager.load_plugin(new plasma::plasma_server{ std::move(vm) });
     return 0;
 }

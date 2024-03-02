@@ -22,34 +22,13 @@
 
 #pragma once
 
-#include <map>
-#include <memory>
-
-#include "plugin.hpp"
-#include "exception/plugin_loading_exception.hpp"
-
-namespace plasma::plugin
+namespace plasma::config
 {
-    class plugin_manager
+    class config
     {
-    private:
-        std::map<const char*, std::unique_ptr<plugin>> plugins_;
     public:
-        plugin_manager() = default;
-        void load_plugin(plugin* plugin)
-        {
-            if (plugins_.contains(plugin->get_name()))
-            {
-                throw exception::plugin_loading_exception{ plugin->get_name() };
-            }
-            plugin->initialize(*this);
-            plugins_.insert({ plugin->get_name(), std::unique_ptr<class plugin>{ plugin } });
-        }
-
-        auto unload_plugin(const char* name)
-        {
-            return plugins_.erase(name);
-        }
+        virtual void load() = 0;
+        virtual void save();
+        virtual ~config();
     };
 }
-

@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,21 +22,27 @@
 
 #pragma once
 
-#include <chrono>
-#include <fmt/format.h>
+#include <boost/program_options.hpp>
 
-const auto g_release_version{ "@RELEASE_VERSION@" };
+#include <plasma/config/plasma_config.h>
+#include <plasma/plugin/plugin.h>
 
-const auto g_branch_name{ "@BRANCH_NAME@" };
+#include <version.hpp>
 
-const auto g_commit_hash{ "@COMMIT_HASH@" };
+namespace plasma
+{
+    class plasma_server : public plasma::plugin::plugin
+    {
+    private:
+        plasma::config::plasma_config config_;
+        boost::program_options::variables_map vm_;
+    public:
+        explicit plasma_server(boost::program_options::variables_map vm);
 
-const auto g_build_date{ __DATE__ };
+        const char* get_name() noexcept override;
 
-const auto g_full_version_string{
-#if !defined(NDEBUG) || defined(_DEBUG)
-    fmt::format("Plasma {} [git {}:{}] [debug]", g_release_version, g_branch_name, g_commit_hash)
-#else
-    fmt::format("Plasma {} [git {}:{}]", g_release_version, g_branch_name, g_commit_hash)
-#endif
-};
+        const char* get_version() noexcept override;
+
+        void initialize(plasma::plugin::plugin_manager& manager) override;
+    };
+}

@@ -87,6 +87,7 @@
         "*.ipp": "cpp",
         "*.in": "cpp",
         "csetjmp": "cpp",
-        "csignal": "cpp"
+        "csignal": "cpp",
+        "filesystem": "cpp"
     }
 }

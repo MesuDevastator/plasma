@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,21 +22,25 @@
 
 #pragma once
 
-#include <chrono>
-#include <fmt/format.h>
+#include <map>
+#include <memory>
 
-const auto g_release_version{ "@RELEASE_VERSION@" };
+#include <plasma/plugin/plugin.h>
 
-const auto g_branch_name{ "@BRANCH_NAME@" };
+namespace plasma::plugin
+{
+    class plugin;
+    class plugin_manager
+    {
+    private:
+        std::map<const char*, std::unique_ptr<plugin>> plugins_;
+    public:
+        plugin_manager();
+        bool load_plugin(plugin* plugin);
 
-const auto g_commit_hash{ "@COMMIT_HASH@" };
+        std::size_t unload_plugin(const char* name);
 
-const auto g_build_date{ __DATE__ };
+        const std::unique_ptr<plugin>& get_plugin(const char* name) const;
+    };
+}
 
-const auto g_full_version_string{
-#if !defined(NDEBUG) || defined(_DEBUG)
-    fmt::format("Plasma {} [git {}:{}] [debug]", g_release_version, g_branch_name, g_commit_hash)
-#else
-    fmt::format("Plasma {} [git {}:{}]", g_release_version, g_branch_name, g_commit_hash)
-#endif
-};

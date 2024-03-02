@@ -20,27 +20,43 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include <boost/program_options.hpp>
 
-#include <exception>
-#include <string>
-#include <fmt/format.h>
+#include <plasma/log.hpp>
+#include <plasma/config/plasma_config.h>
+#include <plasma/plugin/plugin.h>
+#include <plasma/plasma_server.h>
 
-namespace plasma::plugin::exception
+#include <version.hpp>
+
+extern bool g_color_enabled;
+
+namespace plasma
 {
-    class plugin_loading_exception : public std::exception
+    plasma_server::plasma_server(boost::program_options::variables_map vm) :
+        config_{}, vm_{ std::move(vm) }
     {
-    private:
-        const std::string error_message;
-    public:
-        plugin_loading_exception(const char* plugin_name) noexcept :
-            error_message{ fmt::format("Failed to load plugin: {}", plugin_name) }
-        {
-        }
+    }
 
-        const char* what() const noexcept override
+    const char* plasma_server::get_name() noexcept
+    {
+        return "plasma";
+    }
+
+    const char* plasma_server::get_version() noexcept
+    {
+        return g_release_version;
+    }
+
+    void plasma_server::initialize(plasma::plugin::plugin_manager& manager)
+    {
+        logger lg{};
+        config_.load();
+        if (vm_.count("init"))
         {
-            return error_message.c_str();
+            INF(lg) << "Initialized configurations";
+            return;
         }
-    };
+        g_color_enabled = config_.logging.color_enabled;
+    }
 }
