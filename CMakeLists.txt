@@ -62,7 +62,7 @@ add_executable(Plasma
     main.cpp
     ${PLASMA_SRCS}
 )
-add_dependencies(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc-static)
+add_dependencies(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc)
 target_include_directories(Plasma PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -70,4 +70,13 @@ target_include_directories(Plasma PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/cxx_detect
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/mimalloc/include
 )
-target_link_libraries(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc-static)
+target_link_libraries(Plasma Boost::log Boost::program_options Boost::property_tree Boost::interprocess fmt::fmt mimalloc)
+
+install(
+    TARGETS Plasma
+    EXPORT Plasma
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    PUBLIC_HEADER DESTINATION include
+)
