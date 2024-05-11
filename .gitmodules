@@ -1,0 +1,15 @@
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/cxx_detect"]
+	path = lib/cxx_detect
+	url = https://github.com/cxxstuff/cxx_detect.git
+[submodule "lib/boost"]
+	path = lib/boost
+	url = https://github.com/boostorg/boost.git
+[submodule "lib/mimalloc"]
+	path = lib/mimalloc
+	url = https://github.com/microsoft/mimalloc.git
+[submodule "lib/semver"]
+	path = lib/semver
+	url = https://github.com/Neargye/semver.git

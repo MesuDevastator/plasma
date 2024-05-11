@@ -1,0 +1,6 @@
+/cmake-build-*
+/servers
+/build
+/.cache
+/.vscode
+/.idea
