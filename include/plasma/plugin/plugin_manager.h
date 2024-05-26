@@ -28,6 +28,7 @@
 
 #include <plasma/plugin/plugin.h>
 #include <plasma/extern.h>
+#include <plasma/log.h>
 
 namespace plasma::plugin
 {
@@ -36,6 +37,7 @@ namespace plasma::plugin
     {
     private:
         std::map<std::size_t, std::pair<std::unique_ptr<plugin>, bool>> plugins_;
+        logger lg_{};
     public:
         PLASMA_EXTERN plugin_manager();
         PLASMA_EXTERN void register_plugin(plugin* plugin);

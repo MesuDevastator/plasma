@@ -28,7 +28,6 @@ namespace plasma::config
     {
     public:
         virtual void load() = 0;
-        virtual void save();
-        virtual ~config();
+        virtual void save() = 0;
     };
 }

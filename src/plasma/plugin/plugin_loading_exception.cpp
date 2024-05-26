@@ -28,8 +28,12 @@ namespace plasma::plugin
     {
     }
 
+    plugin_loading_exception::plugin_loading_exception(const std::string& message) noexcept : message_{ message }
+    {
+    }
+
     const char* plugin_loading_exception::what() const noexcept
     {
-        return message_;
+        return message_.c_str();
     }
 }

@@ -20,15 +20,11 @@
  * SOFTWARE.
  */
 
-#include <plasma/config/config.h>
-
-namespace plasma::config
+namespace plasma::registry
 {
-    void config::save()
+    class registries
     {
-    }
-    config::~config()
-    {
-        save();
-    }
+    public:
+        
+    };
 }

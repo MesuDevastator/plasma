@@ -23,7 +23,8 @@
 #include <map>
 #include <memory>
 
-#include <plasma/log.h>
+#include <fmt/format.h>
+
 #include <plasma/plugin/plugin.h>
 #include <plasma/plugin/plugin_manager.h>
 #include <plasma/plugin/plugin_loading_exception.h>
@@ -34,14 +35,13 @@ namespace plasma::plugin
 
     void plugin_manager::register_plugin(plugin* plugin)
     {
-        logger lg{};
         if (plugin == nullptr)
         {
             throw plugin_loading_exception{ "Trying to register a null plugin" };
         }
-        INF(lg) << "Registering plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
+        INF(lg_) << "Registering plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
         std::size_t hash{ std::hash<std::string>{}(plugin->get_descriptor().name) };
-        TRC(lg) << "Plugin " << plugin->get_descriptor().name << " name hash \"" << std::hex << hash << std::dec << "\"";
+        TRC(lg_) << "Plugin " << plugin->get_descriptor().name << " name hash \"" << std::hex << hash << std::dec << "\"";
         if (plugins_.contains(hash))
         {
             throw plugin_loading_exception{ "Trying to register a duplicated plugin" };
@@ -51,7 +51,6 @@ namespace plasma::plugin
 
     void plugin_manager::initialize_plugins()
     {
-        logger lg{};
         for (auto& [_, plugin] : plugins_)
         {
             if (plugin.second)
@@ -62,19 +61,19 @@ namespace plasma::plugin
             {
                 if (plugins_.contains(std::hash<std::string>{}(conflict.name)))
                 {
-                    ERR(lg) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name, plugin.first->get_descriptor().name);
+                    ERR(lg_) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name, plugin.first->get_descriptor().name);
                     throw plugin_loading_exception{ "Plugin conflict detected" };
                 }
             }
             auto initialize{
-                [this, &lg](auto&& self, auto& plugin) -> void
+                [this](auto&& self, auto& plugin) -> void
                 {
                     if (plugin.second)
                     {
                         return;
                     }
                     plugin.second = true;   // To prevent infinite recursion
-                    INF(lg) << "Initializing plugin " << plugin.first->get_descriptor().name << " " << plugin.first->get_descriptor().version;
+                    INF(lg_) << "Initializing plugin " << plugin.first->get_descriptor().name << " " << plugin.first->get_descriptor().version;
                     try
                     {
                         for (const auto& dependency : plugin.first->get_descriptor().dependencies)
@@ -82,7 +81,7 @@ namespace plasma::plugin
                             std::size_t hash{ std::hash<std::string>{}(dependency.name) };
                             if (!plugins_.contains(hash))
                             {
-                                ERR(lg) << fmt::format("Dependency plugin {} not found while loading {}", dependency.name, plugin.first->get_descriptor().name);
+                                ERR(lg_) << fmt::format("Dependency plugin {} not found while loading {}", dependency.name, plugin.first->get_descriptor().name);
                                 throw plugin_loading_exception{ "Plugin dependency not found" };
                             }
                             self(self, plugins_.at(hash));   // Throws std::out_of_range if dependency not found
@@ -95,7 +94,7 @@ namespace plasma::plugin
                             }
                             else
                             {
-                                WRN(lg) << "Optional dependency " << optional_dependency.name << " not found";
+                                WRN(lg_) << "Optional dependency " << optional_dependency.name << " not found";
                             }
                         }
                         plugin.first->initialize(*this);

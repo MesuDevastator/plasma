@@ -35,7 +35,7 @@ namespace plasma::util
         std::ofstream lock_file_;
         std::filesystem::path lock_file_path_;
     public:
-        PLASMA_EXTERN static const std::string directory_lock_name;
+        static constexpr auto directory_lock_name{ "session.lock" };
 
         PLASMA_EXTERN explicit directory_lock(std::filesystem::path directory);
 

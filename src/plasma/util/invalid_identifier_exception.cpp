@@ -20,40 +20,20 @@
  * SOFTWARE.
  */
 
-#include <filesystem>
-#include <fstream>
-
-#include <fmt/format.h>
-
-#include <plasma/util/directory_lock.h>
-#include <plasma/log.h>
+#include <plasma/util/invalid_identifier_exception.h>
 
 namespace plasma::util
 {
-    directory_lock::directory_lock(const std::filesystem::path directory)
+    invalid_identifier_exception::invalid_identifier_exception(const char* message) noexcept : message_{ message }
     {
-        if (is_locked(directory))
-        {
-            throw std::runtime_error{ fmt::format("Failed to lock the locked directory {}", directory.string()) };
-        }
-        create_directories(directory);
-        lock_file_path_ = std::filesystem::path{ directory / directory_lock_name };
-        lock_file_ = std::ofstream{ lock_file_path_, std::ios::trunc };
-        lock_file_ << "plasma::util::directory_lock locked";
-        lock_file_.flush();
     }
 
-    bool directory_lock::is_locked(std::filesystem::path directory)
+    invalid_identifier_exception::invalid_identifier_exception(const std::string& message) noexcept : message_{ message }
     {
-        return exists(directory / directory_lock_name);
     }
 
-    directory_lock::~directory_lock()
+    const char* invalid_identifier_exception::what() const noexcept
     {
-        if (lock_file_.is_open())
-        {
-            lock_file_.close();
-        }
-        remove(lock_file_path_);
+        return message_.c_str();
     }
 }

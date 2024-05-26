@@ -25,7 +25,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
-#include <plasma/log.h>
 #include <plasma/config/plasma_config.h>
 
 namespace plasma::config
@@ -47,11 +46,10 @@ namespace plasma::config
 
     void plasma_config::load()
     {
-        logger lg{};
-        INF(lg) << "Loading plasma configuration";
+        INF(lg_) << "Loading plasma configuration";
         if (!exists(file_path_))
         {
-            WRN(lg) << "Failed to find " << file_path_ << ", initializing a new one";
+            WRN(lg_) << "Failed to find " << file_path_ << ", initializing a new one";
             save();
         }
         boost::property_tree::ptree tree{};
@@ -66,8 +64,7 @@ namespace plasma::config
 
     void plasma_config::save()
     {
-        logger lg{};
-        INF(lg) << "Saving plasma configuration";
+        INF(lg_) << "Saving plasma configuration";
         boost::property_tree::ptree tree{};
 
         tree.put("world.storage.base_dir", world.storage.base_dir.string());

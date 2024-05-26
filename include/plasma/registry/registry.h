@@ -20,40 +20,11 @@
  * SOFTWARE.
  */
 
-#include <filesystem>
-#include <fstream>
-
-#include <fmt/format.h>
-
-#include <plasma/util/directory_lock.h>
-#include <plasma/log.h>
-
-namespace plasma::util
+namespace plasma::registry
 {
-    directory_lock::directory_lock(const std::filesystem::path directory)
+    class registry
     {
-        if (is_locked(directory))
-        {
-            throw std::runtime_error{ fmt::format("Failed to lock the locked directory {}", directory.string()) };
-        }
-        create_directories(directory);
-        lock_file_path_ = std::filesystem::path{ directory / directory_lock_name };
-        lock_file_ = std::ofstream{ lock_file_path_, std::ios::trunc };
-        lock_file_ << "plasma::util::directory_lock locked";
-        lock_file_.flush();
-    }
+    public:
 
-    bool directory_lock::is_locked(std::filesystem::path directory)
-    {
-        return exists(directory / directory_lock_name);
-    }
-
-    directory_lock::~directory_lock()
-    {
-        if (lock_file_.is_open())
-        {
-            lock_file_.close();
-        }
-        remove(lock_file_path_);
-    }
+    };
 }

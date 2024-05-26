@@ -26,6 +26,7 @@
 
 #include <plasma/config/plasma_config.h>
 #include <plasma/plugin/plugin.h>
+#include <plasma/log.h>
 
 #include <plasma/version.h>
 
@@ -37,11 +38,14 @@ namespace plasma
         plasma::config::plasma_config config_;
         boost::program_options::variables_map vm_;
         plasma::plugin::plugin_descriptor descriptor_;
+        logger lg_;
     public:
         PLASMA_EXTERN explicit plasma_server(const boost::program_options::variables_map& vm);
 
         PLASMA_EXTERN const plasma::plugin::plugin_descriptor& get_descriptor() noexcept override;
 
         PLASMA_EXTERN void initialize(plasma::plugin::plugin_manager& manager) override;
+
+        PLASMA_EXTERN ~plasma_server();
     };
 }

@@ -25,6 +25,7 @@
 #include <filesystem>
 
 #include <plasma/config/config.h>
+#include <plasma/log.h>
 
 namespace plasma::config
 {
@@ -32,6 +33,7 @@ namespace plasma::config
     {
     private:
         std::filesystem::path file_path_;
+        logger lg_;
     public:
         class
         {

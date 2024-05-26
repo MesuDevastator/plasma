@@ -22,7 +22,6 @@
 
 #include <boost/program_options.hpp>
 
-#include <plasma/log.h>
 #include <plasma/config/plasma_config.h>
 #include <plasma/plugin/plugin.h>
 #include <plasma/plasma_server.h>
@@ -49,12 +48,16 @@ namespace plasma
 
     void plasma_server::initialize(plasma::plugin::plugin_manager&)
     {
-        logger lg{};
         config_.load();
         if (vm_.count("init"))
         {
-            INF(lg) << "Initialized configurations";
+            INF(lg_) << "Initialized configurations";
             return;
         }
+    }
+
+    plasma_server::~plasma_server()
+    {
+        config_.save();
     }
 }

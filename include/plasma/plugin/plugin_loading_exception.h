@@ -23,7 +23,7 @@
 #pragma once
 
 #include <exception>
-#include <fmt/format.h>
+#include <string>
 
 #include <plasma/extern.h>
 
@@ -32,9 +32,10 @@ namespace plasma::plugin
     class plugin_loading_exception : public std::exception
     {
     private:
-        const char* message_;
+        std::string message_;
     public:
         PLASMA_EXTERN explicit plugin_loading_exception(const char* message) noexcept;
+        PLASMA_EXTERN explicit plugin_loading_exception(const std::string& message) noexcept;
         PLASMA_EXTERN const char* what() const noexcept override;
     };
 }
