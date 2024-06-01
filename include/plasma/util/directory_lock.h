@@ -29,7 +29,7 @@
 
 namespace plasma::util
 {
-    class directory_lock
+    class PLASMA_EXTERN directory_lock
     {
     private:
         std::ofstream lock_file_;
@@ -37,10 +37,10 @@ namespace plasma::util
     public:
         static constexpr auto directory_lock_name{ "session.lock" };
 
-        PLASMA_EXTERN explicit directory_lock(std::filesystem::path directory);
+        explicit directory_lock(std::filesystem::path directory);
 
-        PLASMA_EXTERN static bool is_locked(std::filesystem::path directory);
+        static bool is_locked(std::filesystem::path directory);
 
-        PLASMA_EXTERN ~directory_lock();
+        ~directory_lock();
     };
 }

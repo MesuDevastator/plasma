@@ -33,17 +33,17 @@
 namespace plasma::plugin
 {
     class plugin;
-    class plugin_manager
+    class PLASMA_EXTERN plugin_manager
     {
     private:
         std::map<std::size_t, std::pair<std::unique_ptr<plugin>, bool>> plugins_;
         logger lg_{};
     public:
-        PLASMA_EXTERN plugin_manager();
-        PLASMA_EXTERN void register_plugin(plugin* plugin);
-        PLASMA_EXTERN void initialize_plugins();
-        PLASMA_EXTERN std::size_t unload_plugin(const std::string& name);
-        PLASMA_EXTERN const std::unique_ptr<plugin>& get_plugin(const std::string& name) const;
+        plugin_manager();
+        void register_plugin(plugin* plugin);
+        void initialize_plugins();
+        std::size_t unload_plugin(const std::string& name);
+        const std::unique_ptr<plugin>& get_plugin(const std::string& name) const;
     };
 }
 

@@ -31,17 +31,25 @@ namespace plasma::config
 {
     plasma_config::plasma_config() noexcept :
         file_path_{ "./configs/plasma.info" },
+        logging
+        {
+            .color_logging = true
+        },
         world
         {
             .storage
             {
-                .base_dir{ "." },
-                .backup_dir{ "./backups" }
+                .base_dir = ".",
+                .backup_dir = "./backups"
             },
-            .name{ "world" }
+            .name = "world"
+        },
+        networking
+        {
+            .listen_address = "0.0.0.0",
+            .listen_port = 25565
         }
     {
-        
     }
 
     void plasma_config::load()
@@ -55,9 +63,14 @@ namespace plasma::config
         boost::property_tree::ptree tree{};
         boost::property_tree::read_info(file_path_.string(), tree);
 
+        logging.color_logging = tree.get<bool>("logging.color_logging", logging.color_logging);
+
         world.storage.base_dir = tree.get<std::string>("world.storage.base_dir", world.storage.base_dir.string());
         world.storage.backup_dir = tree.get<std::string>("world.storage.backup_dir", world.storage.backup_dir.string());
         world.name = tree.get<std::string>("world.name", world.name);
+
+        networking.listen_address = tree.get<std::string>("networking.listen_address", networking.listen_address);
+        networking.listen_port = tree.get<boost::asio::ip::port_type>("networking.listen_port", networking.listen_port);
 
         save();
     }
@@ -67,9 +80,14 @@ namespace plasma::config
         INF(lg_) << "Saving plasma configuration";
         boost::property_tree::ptree tree{};
 
+        tree.put("logging.color_logging", logging.color_logging);
+
         tree.put("world.storage.base_dir", world.storage.base_dir.string());
         tree.put("world.storage.backup_dir", world.storage.backup_dir.string());
         tree.put("world.name", world.name);
+
+        tree.put("networking.listen_address", networking.listen_address);
+        tree.put("networking.listen_port", networking.listen_port);
 
         create_directories(file_path_.parent_path());
         write_info(file_path_.string(), tree);

@@ -105,7 +105,7 @@ namespace plasma::plugin
                         throw;
                     }
                 }
-                                };
+            };
             initialize(initialize, plugin);
         }
     }

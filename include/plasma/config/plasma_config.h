@@ -24,6 +24,8 @@
 
 #include <filesystem>
 
+#include <boost/asio.hpp>
+
 #include <plasma/config/config.h>
 #include <plasma/log.h>
 
@@ -38,6 +40,12 @@ namespace plasma::config
         class
         {
         public:
+            bool color_logging;
+        } logging;
+
+        class
+        {
+        public:
             class
             {
             public:
@@ -46,6 +54,13 @@ namespace plasma::config
             } storage;
             std::string name;
         } world;
+
+        class
+        {
+        public:
+            std::string listen_address;
+            boost::asio::ip::port_type listen_port;
+        } networking;
 
         plasma_config() noexcept;
 

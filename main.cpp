@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2023-2024 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -100,12 +100,6 @@ int main(const int argc, const char* argv[])
     {
         std::cerr << desc << std::endl;
         return 1;
-    }
-
-    if (vm.count("color"))
-    {
-        plasma::log::color_enabled = true;
-        INF(lg) << "Enabled colored logging";
     }
 
     plasma::plugin::plugin_manager manager{};

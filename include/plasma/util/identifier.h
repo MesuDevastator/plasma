@@ -29,7 +29,7 @@
 
 namespace plasma::util
 {
-    class identifier
+    class PLASMA_EXTERN identifier
     {
     private:
         static const std::string& validate_path(const std::string& namespace_, const std::string& path);
@@ -41,9 +41,9 @@ namespace plasma::util
         {
         };
         
-        PLASMA_EXTERN static std::array<std::string, 2> split(const std::string& id, const char delimiter) noexcept;
+        static std::array<std::string, 2> split(const std::string& id, const char delimiter) noexcept;
 
-        PLASMA_EXTERN identifier(const std::string& namespace_, const std::string& path, [[maybe_unused]] std::unique_ptr<extra_data> extra_data) noexcept;
+        identifier(const std::string& namespace_, const std::string& path, [[maybe_unused]] std::unique_ptr<extra_data> extra_data) noexcept;
     public:
         // TODO: DFU serialization
         static constexpr auto namespace_separator{ ':' };
@@ -53,27 +53,27 @@ namespace plasma::util
         std::string namespace_;
         std::string path;
 
-        PLASMA_EXTERN static bool is_path_valid(const std::string& path) noexcept;
-        PLASMA_EXTERN static bool is_path_character_valid(const char character) noexcept;
-        PLASMA_EXTERN static bool is_namespace_valid(const std::string& namespace_) noexcept;
-        PLASMA_EXTERN static bool is_namespace_character_valid(const char character) noexcept;
+        static bool is_path_valid(const std::string& path) noexcept;
+        static bool is_path_character_valid(const char character) noexcept;
+        static bool is_namespace_valid(const std::string& namespace_) noexcept;
+        static bool is_namespace_character_valid(const char character) noexcept;
 
-        PLASMA_EXTERN identifier(const std::string& namespace_, const std::string& path) noexcept;
-        PLASMA_EXTERN explicit identifier(const std::string& id) noexcept;
-        PLASMA_EXTERN identifier(const std::string& id, const char delimiter) noexcept;
+        identifier(const std::string& namespace_, const std::string& path) noexcept;
+        explicit identifier(const std::string& id) noexcept;
+        identifier(const std::string& id, const char delimiter) noexcept;
 
-        PLASMA_EXTERN identifier with_path(const std::string& path) const;
+        identifier with_path(const std::string& path) const;
 
-        PLASMA_EXTERN virtual operator std::string() const;
-        PLASMA_EXTERN virtual bool operator==(const identifier& other) const;
+        virtual operator std::string() const;
+        virtual bool operator==(const identifier& other) const;
     };
 }
 
 namespace std
 {
     template<>
-    struct hash<plasma::util::identifier>
+    struct PLASMA_EXTERN hash<plasma::util::identifier>
     {
-        PLASMA_EXTERN std::size_t operator()(const plasma::util::identifier& identifier) const;
+        std::size_t operator()(const plasma::util::identifier& identifier) const;
     };
 }

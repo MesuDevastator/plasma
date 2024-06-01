@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#pragma once
+
 #include <string>
 #include <vector>
 #include <semver.hpp>

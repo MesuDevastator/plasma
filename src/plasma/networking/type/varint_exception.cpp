@@ -20,22 +20,20 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include <plasma/networking/type/varint_exception.h>
 
-#include <exception>
-#include <string>
-
-#include <plasma/extern.h>
-
-namespace plasma::util
+namespace plasma::networking::type
 {
-    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
+    varint_exception::varint_exception(const char* message) noexcept : message_{ message }
     {
-    private:
-        std::string message_;
-    public:
-        explicit invalid_identifier_exception(const char* message) noexcept;
-        explicit invalid_identifier_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
+    }
+
+    varint_exception::varint_exception(const std::string& message) noexcept : message_{ message }
+    {
+    }
+
+    const char* varint_exception::what() const noexcept
+    {
+        return message_.c_str();
+    }
 }

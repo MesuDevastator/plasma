@@ -29,13 +29,13 @@
 
 namespace plasma::plugin
 {
-    class plugin_loading_exception : public std::exception
+    class PLASMA_EXTERN plugin_loading_exception : public std::exception
     {
     private:
         std::string message_;
     public:
-        PLASMA_EXTERN explicit plugin_loading_exception(const char* message) noexcept;
-        PLASMA_EXTERN explicit plugin_loading_exception(const std::string& message) noexcept;
-        PLASMA_EXTERN const char* what() const noexcept override;
+        explicit plugin_loading_exception(const char* message) noexcept;
+        explicit plugin_loading_exception(const std::string& message) noexcept;
+        const char* what() const noexcept override;
     };
 }

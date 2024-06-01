@@ -27,15 +27,15 @@
 
 #include <plasma/extern.h>
 
-namespace plasma::util
+namespace plasma::networking::type
 {
-    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
+    class PLASMA_EXTERN varint_exception : public std::exception
     {
     private:
         std::string message_;
     public:
-        explicit invalid_identifier_exception(const char* message) noexcept;
-        explicit invalid_identifier_exception(const std::string& message) noexcept;
+        explicit varint_exception(const char* message) noexcept;
+        explicit varint_exception(const std::string& message) noexcept;
         const char* what() const noexcept override;
     };
 }

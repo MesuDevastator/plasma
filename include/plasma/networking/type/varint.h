@@ -22,20 +22,17 @@
 
 #pragma once
 
-#include <exception>
-#include <string>
-
+#include <cstddef>
+#include <cstdint>
 #include <plasma/extern.h>
+#include <plasma/networking/type/varint_exception.h>
 
-namespace plasma::util
+namespace plasma::networking::type
 {
-    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
-    {
-    private:
-        std::string message_;
-    public:
-        explicit invalid_identifier_exception(const char* message) noexcept;
-        explicit invalid_identifier_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
+    constexpr const std::byte segment_bits{ 0x7f };
+    constexpr const std::byte continue_bit{ 0x80 };
+    PLASMA_EXTERN int32_t read_varint(std::byte* data, std::size_t max_length);
+    PLASMA_EXTERN void write_varint(int32_t value, std::byte* data, std::size_t max_length);
+    PLASMA_EXTERN int64_t read_varlong(std::byte* data, std::size_t max_length);
+    PLASMA_EXTERN void write_varlong(int64_t value, std::byte* data, std::size_t max_length);
 }

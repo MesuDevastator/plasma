@@ -30,6 +30,7 @@ BOOST_AUTO_TEST_SUITE(directory_lock_test)
 
 BOOST_AUTO_TEST_CASE(directory_locking)
 {
+    plasma::log::initialize_logging_system_test();
     std::filesystem::path test_dir{ std::filesystem::temp_directory_path() / "plasma_test_dir" };
     create_directories(test_dir);
     BOOST_TEST(!plasma::util::directory_lock::is_locked(test_dir));

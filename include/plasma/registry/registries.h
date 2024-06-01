@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+#pragma once
+
 namespace plasma::registry
 {
     class registries

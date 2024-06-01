@@ -30,12 +30,12 @@
 namespace plasma::plugin
 {
     class plugin_manager;
-    class plugin
+    class PLASMA_EXTERN plugin
     {
     public:
         virtual const plugin_descriptor& get_descriptor() noexcept = 0;
         virtual void initialize(plugin_manager&) = 0;
-        PLASMA_EXTERN virtual ~plugin();
+        virtual ~plugin();
     };
 }
 

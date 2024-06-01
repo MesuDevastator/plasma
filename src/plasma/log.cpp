@@ -27,7 +27,7 @@
 namespace plasma::log
 {
     boost::shared_ptr<std::ostream> clog_stream_ptr = boost::shared_ptr<std::ostream>{ &std::clog, boost::null_deleter{} };
-    bool color_enabled{ false };
+    bool color_enabled{ true };
     bool logging_initialized{ false };
 
 #if !defined(NDEBUG) || defined(_DEBUG)
