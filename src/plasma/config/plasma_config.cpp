@@ -59,6 +59,7 @@ namespace plasma::config
         {
             WRN(lg_) << "Failed to find " << file_path_ << ", initializing a new one";
             save();
+            return;
         }
         boost::property_tree::ptree tree{};
         boost::property_tree::read_info(file_path_.string(), tree);
