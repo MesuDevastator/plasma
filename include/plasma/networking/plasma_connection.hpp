@@ -51,6 +51,7 @@ namespace plasma
             std::queue<type::packet> send_queue_;
             std::mutex send_lock_;
             std::unique_ptr<std::byte[]> raw_buffer_;
+            std::size_t packet_seq_;
             explicit plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid);
             void handle_read_head(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, const pointer self);
             void handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, const pointer self);

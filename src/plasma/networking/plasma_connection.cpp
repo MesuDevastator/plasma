@@ -21,8 +21,10 @@
  */
 
 
+#include "plasma/networking/type/varint.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <plasma/networking/plasma_connection.hpp>
 #include <plasma/plasma_server.hpp>
 
@@ -35,11 +37,22 @@ namespace plasma::networking
         if (!error)
         {
             std::size_t packet_id_length{};
-            auto packet_id{ type::read_varint(raw_buffer_.get() + cursor, packet_id_length, bytes_transferred) };
-            DBG(lg_) << "Packet ID " << packet_id;
+            std::int32_t packet_id{};
+            try
+            {
+                packet_id = type::read_varint(raw_buffer_.get() + cursor, packet_id_length, bytes_transferred);
+            }
+            catch (const type::varint_exception&)
+            {
+                ERR(lg_) << "Invalid packet from connection " << to_string(uuid_);
+                kill();
+                return;
+            }
+            DBG(lg_) << fmt::format("[{}] Packet ID {}", packet_seq_, packet_id);
             type::packet packet{ cursor + packet_id_length, bytes_transferred - packet_id_length, packet_id, raw_buffer_.get() + cursor + packet_id_length };
+            packet_seq_++;
             std::fill(raw_buffer_.get(), raw_buffer_.get() + cursor + bytes_transferred, std::byte{});
-            start_read();
+            start_read();    
         }
         else
         {
@@ -52,10 +65,26 @@ namespace plasma::networking
     {
         if (!error)
         {
+            if (cursor + 1 > type::varint_max_size)
+            {
+                ERR(lg_) << "Invalid packet from connection " << to_string(uuid_);
+                kill();
+                return;
+            }
             if ((raw_buffer_[cursor] & type::continue_bit) == std::byte{})
             {
-                const auto length{ type::read_varint(raw_buffer_.get()) };
-                DBG(lg_) << "Packet length " << length;
+                std::int32_t length{};
+                try
+                {
+                    length = type::read_varint(raw_buffer_.get());   
+                }
+                catch (const type::varint_exception&)
+                {
+                    ERR(lg_) << "Invalid packet from connection " << to_string(uuid_);
+                    kill();
+                    return;
+                }
+                DBG(lg_) << fmt::format("[{}] Packet length {}", packet_seq_, length);
                 async_read(socket_, boost::asio::buffer(raw_buffer_.get() + cursor + 1, length), std::bind(&plasma_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2, cursor + 1, self));
             }
             else
@@ -90,7 +119,7 @@ namespace plasma::networking
     }
 
     plasma_connection::plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid) :
-        server_{ server }, socket_{ io_context }, uuid_{ uuid }, raw_buffer_{ std::make_unique<std::byte[]>(max_raw_packet_length) }
+        server_{ server }, socket_{ io_context }, uuid_{ uuid }, raw_buffer_{ std::make_unique<std::byte[]>(max_raw_packet_length) }, packet_seq_{ 1 }
     {
     }
 
