@@ -23,6 +23,7 @@ project(Plasma LANGUAGES CXX)
 option(PLASMA_NOLOGO "Disable Plasma logo" OFF)
 
 set(BUILD_SHARED_LIBS ON)
+set(YAML_CPP_INSTALL ON)
 set(MI_SECURE ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -48,6 +49,7 @@ add_subdirectory(./lib/fmt)
 add_subdirectory(./lib/boost)
 add_subdirectory(./lib/mimalloc)
 add_subdirectory(./lib/semver)
+add_subdirectory(./lib/yaml-cpp)
 
 enable_testing()
 
@@ -95,6 +97,7 @@ configure_file(version.cpp.in version.cpp @ONLY)
 set(DEPENDENCIES
     fmt
     mimalloc
+    yaml-cpp
 )
 include_directories(
     "${PROJECT_BINARY_DIR}"
@@ -102,11 +105,13 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/lib/fmt/include"
     "${PROJECT_SOURCE_DIR}/lib/cxx_detect"
     "${PROJECT_SOURCE_DIR}/lib/semver/include"
+    "${PROJECT_SOURCE_DIR}/lib/yaml_parser/include"
+    "${PROJECT_SOURCE_DIR}/lib/yaml_cpp/include"
 )
 
 file(GLOB_RECURSE PLASMA_SRCS "${PROJECT_SOURCE_DIR}/include/*.h" "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
-add_library(plasma SHARED ${PLASMA_SRCS} "${PROJECT_BINARY_DIR}/version.cpp")
+add_library(plasma SHARED ${PLASMA_SRCS} "${PROJECT_SOURCE_DIR}/lib/yaml_parser/src/yaml_parser.cpp" "${PROJECT_BINARY_DIR}/version.cpp")
 add_dependencies(plasma ${DEPENDENCIES} ${BOOST_LIBRARIES})
 target_link_libraries(plasma ${DEPENDENCIES} ${BOOST_LIBRARIES})
 target_compile_definitions(plasma PRIVATE PLASMA_LIB)

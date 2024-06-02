@@ -25,7 +25,7 @@
 #include <string>
 #include <functional>
 
-#include <plasma/extern.h>
+#include <plasma/extern.hpp>
 
 namespace plasma::util
 {

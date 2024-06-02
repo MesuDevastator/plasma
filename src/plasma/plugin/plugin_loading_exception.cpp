@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include <plasma/plugin/plugin_loading_exception.h>
+#include <plasma/plugin/plugin_loading_exception.hpp>
 
 namespace plasma::plugin
 {

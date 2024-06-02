@@ -21,8 +21,8 @@
  */
 
 #include <boost/container_hash/hash.hpp>
-#include <plasma/util/identifier.h>
-#include <plasma/util/invalid_identifier_exception.h>
+#include <plasma/util/identifier.hpp>
+#include <plasma/util/invalid_identifier_exception.hpp>
 
 #include <fmt/format.h>
 

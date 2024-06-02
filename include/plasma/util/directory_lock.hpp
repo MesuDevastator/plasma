@@ -22,17 +22,25 @@
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <plasma/extern.h>
-#include <plasma/networking/type/varint_exception.h>
+#include <filesystem>
+#include <fstream>
 
-namespace plasma::networking::type
+#include <plasma/extern.hpp>
+
+namespace plasma::util
 {
-    constexpr const std::byte segment_bits{ 0x7f };
-    constexpr const std::byte continue_bit{ 0x80 };
-    PLASMA_EXTERN int32_t read_varint(std::byte* data, std::size_t max_length);
-    PLASMA_EXTERN void write_varint(int32_t value, std::byte* data, std::size_t max_length);
-    PLASMA_EXTERN int64_t read_varlong(std::byte* data, std::size_t max_length);
-    PLASMA_EXTERN void write_varlong(int64_t value, std::byte* data, std::size_t max_length);
+    class PLASMA_EXTERN directory_lock
+    {
+    private:
+        std::ofstream lock_file_;
+        std::filesystem::path lock_file_path_;
+    public:
+        static constexpr auto directory_lock_name{ "session.lock" };
+
+        explicit directory_lock(std::filesystem::path directory);
+
+        static bool is_locked(std::filesystem::path directory);
+
+        ~directory_lock();
+    };
 }

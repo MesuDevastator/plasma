@@ -22,20 +22,50 @@
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <filesystem>
 
-#include <plasma/extern.h>
+#include <boost/asio.hpp>
 
-namespace plasma::util
+#include <plasma/config/config.hpp>
+#include <plasma/log.hpp>
+
+namespace plasma::config
 {
-    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
+    class plasma_config : public config
     {
     private:
-        std::string message_;
+        logger lg_;
+        std::filesystem::path file_path_;
     public:
-        explicit invalid_identifier_exception(const char* message) noexcept;
-        explicit invalid_identifier_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
+        class
+        {
+        public:
+            bool color_logging;
+        } logging;
+
+        class
+        {
+        public:
+            class
+            {
+            public:
+                std::filesystem::path base_dir;
+                std::filesystem::path backup_dir;
+            } storage;
+            std::string name;
+        } world;
+
+        class
+        {
+        public:
+            std::string listen_address;
+            boost::asio::ip::port_type listen_port;
+        } networking;
+
+        plasma_config() noexcept;
+
+        void load() override;
+
+        void save() override;
     };
 }

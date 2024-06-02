@@ -25,9 +25,9 @@
 #include <boost/program_options.hpp>
 #include <boost/asio.hpp>
 
-#include <plasma/config/plasma_config.h>
-#include <plasma/plugin/plugin.h>
-#include <plasma/plasma_server.h>
+#include <plasma/config/plasma_config.hpp>
+#include <plasma/plugin/plugin.hpp>
+#include <plasma/plasma_server.hpp>
 
 namespace plasma
 {
@@ -41,6 +41,7 @@ namespace plasma
     {
         if (!error)
         {
+            std::lock_guard<std::mutex> lock{ connections_lock_ };
             connections_.insert(std::pair{ connection->uuid(), connection });
             connection->start();
         }
@@ -51,7 +52,7 @@ namespace plasma
         config_{},
         vm_{ vm },
         descriptor_{
-            .name = "plasma::server",
+            .name = name,
             .version = semantic_version,
             .description = "Reimplemented Minecraft server core",
             .authors = { "Mesu Devastator" },
@@ -93,12 +94,23 @@ namespace plasma
             throw;
         }
         start_accept();
+    }
+
+    std::size_t plasma_server::remove_connection(const boost::uuids::uuid& uuid)
+    {
+        return connections_.erase(uuid);
+    }
+
+    void plasma_server::start()
+    {
         context_.run();
     }
 
-    void plasma_server::remove_connection(const boost::uuids::uuid& uuid)
+    void plasma_server::stop()
     {
-        connections_.erase(uuid);
+        std::lock_guard<std::mutex> lock{ connections_lock_ };
+        connections_.clear();
+        context_.stop();
     }
 
     plasma_server::~plasma_server()

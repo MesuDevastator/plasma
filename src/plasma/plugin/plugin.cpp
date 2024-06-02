@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include <plasma/plugin/plugin.h>
+#include <plasma/plugin/plugin.hpp>
 
 namespace plasma::plugin
 {

@@ -6,7 +6,7 @@
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions :
+ * furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
@@ -22,15 +22,28 @@
 
 #pragma once
 
+#include <map>
+#include <memory>
 #include <string>
-#include <semver.hpp>
-#include <plasma/extern.h>
 
-namespace plasma
+#include <plasma/plugin/plugin.hpp>
+#include <plasma/extern.hpp>
+#include <plasma/log.hpp>
+
+namespace plasma::plugin
 {
-    PLASMA_EXTERN extern const std::string release_version;
-    PLASMA_EXTERN extern const std::string branch_name;
-    PLASMA_EXTERN extern const std::string commit_hash;
-    PLASMA_EXTERN extern const semver::version semantic_version;
-    PLASMA_EXTERN extern const std::string full_version;
+    class plugin;
+    class PLASMA_EXTERN plugin_manager
+    {
+    private:
+        logger lg_;
+        std::map<std::size_t, std::pair<std::unique_ptr<plugin>, bool>> plugins_;
+    public:
+        plugin_manager();
+        void register_plugin(plugin* plugin);
+        void initialize_plugins();
+        std::size_t unload_plugin(const std::string& name);
+        const std::unique_ptr<plugin>& get_plugin(const std::string& name) const;
+    };
 }
+

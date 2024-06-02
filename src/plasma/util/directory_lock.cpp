@@ -25,8 +25,8 @@
 
 #include <fmt/format.h>
 
-#include <plasma/util/directory_lock.h>
-#include <plasma/log.h>
+#include <plasma/util/directory_lock.hpp>
+#include <plasma/log.hpp>
 
 namespace plasma::util
 {

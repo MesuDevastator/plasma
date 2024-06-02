@@ -25,9 +25,9 @@
 
 #include <fmt/format.h>
 
-#include <plasma/plugin/plugin.h>
-#include <plasma/plugin/plugin_manager.h>
-#include <plasma/plugin/plugin_loading_exception.h>
+#include <plasma/plugin/plugin.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
+#include <plasma/plugin/plugin_loading_exception.hpp>
 
 namespace plasma::plugin
 {

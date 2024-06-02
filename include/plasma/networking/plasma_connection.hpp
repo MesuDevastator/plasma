@@ -28,8 +28,10 @@
 #include <queue>
 #include <mutex>
 
-#include <plasma/extern.h>
-#include <plasma/log.h>
+#include <plasma/networking/type/varint.hpp>
+#include <plasma/networking/type/packet.hpp>
+#include <plasma/extern.hpp>
+#include <plasma/log.hpp>
 
 namespace plasma
 {
@@ -40,42 +42,29 @@ namespace plasma
         {
         public:
             using pointer = std::shared_ptr<plasma_connection>;
-            enum { max_raw_packet_length = 2097151 };
+            enum { max_raw_packet_length = 2097151 + type::varint_max_size };
         private:
-            class packet_node
-            {
-            private:
-                friend class plasma_connection;
-                const std::size_t max_length_;
-                std::size_t cursor_;
-                std::unique_ptr<std::byte[]> data_;
-                packet_node(std::byte* const data, const std::size_t max_length) noexcept;
-            };
-
             logger lg_;
             plasma_server& server_;
             boost::asio::ip::tcp::socket socket_;
             boost::uuids::uuid uuid_;
-            std::queue<packet_node> send_queue_;
+            std::queue<type::packet> send_queue_;
             std::mutex send_lock_;
             std::unique_ptr<std::byte[]> raw_buffer_;
-
             explicit plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid);
-
-            void handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const pointer self);
+            void handle_read_head(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, const pointer self);
+            void handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, const pointer self);
             void handle_write(const boost::system::error_code& error, const pointer self);
+            void start_read();
         public:
             static pointer create(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid) noexcept;
-
             boost::asio::ip::tcp::socket& socket() noexcept;
-
             const boost::uuids::uuid& uuid() const noexcept;
-
             void start();
-
+            // Removes registeration in server
             void kill();
-
-            void send(std::byte* const data, const std::size_t max_length);
+            void send(const type::packet& packet);
+            ~plasma_connection();
         };
     }
 }

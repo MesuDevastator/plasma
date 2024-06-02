@@ -21,8 +21,12 @@
  */
 
 #include <cxx_detect.h>
+#include <csignal>
+#include <cstdlib>
 #include <iostream>
 #include <exception>
+#include <memory>
+#include <thread>
 
 #include <boost/program_options.hpp>
 #include <fmt/format.h>
@@ -31,11 +35,11 @@
 #include <windows.h>
 #endif
 
-#include <plasma/version.h>
+#include <plasma/version.hpp>
 
-#include <plasma/log.h>
-#include <plasma/plugin/plugin_manager.h>
-#include <plasma/plasma_server.h>
+#include <plasma/log.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
+#include <plasma/plasma_server.hpp>
 
 namespace
 {
@@ -46,10 +50,12 @@ namespace
         R"( |    |   |  |__/ __ \_\___ \|  Y Y  \/ __ \_)""\n"
         R"( |____|   |____(____  /____  >__|_|  (____  /)""\n"
         R"(                    \/     \/      \/     \/ )""\n" };
+    std::unique_ptr<plasma::plugin::plugin_manager> manager;
 }
 
 int main(const int argc, const char* argv[])
 {
+    using namespace std::literals::chrono_literals;
 #if CXX_OS_WINDOWS
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
@@ -102,8 +108,29 @@ int main(const int argc, const char* argv[])
         return 1;
     }
 
-    plasma::plugin::plugin_manager manager{};
-    manager.register_plugin(new plasma::plasma_server{ std::move(vm) });
-    manager.initialize_plugins();
+    manager = std::make_unique<plasma::plugin::plugin_manager>();
+    manager->register_plugin(new plasma::plasma_server{ std::move(vm) });
+    manager->initialize_plugins();
+    std::atexit([]{
+        dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->stop();
+    });
+    auto handler{
+        [](const int signal){
+        if (signal == SIGINT)
+        {
+            logger lg{};
+            FTL(lg) << "Caught SIGINT, terminating...";
+            std::exit(0);
+        }
+    } };
+    if (std::signal(SIGINT, handler) == SIG_ERR)
+    {
+        WRN(lg) << "Failed to set signal handler";
+    }
+    else
+    {
+        TRC(lg) << "Set signal handler";
+    }
+    dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->start();
     return 0;
 }

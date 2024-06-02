@@ -22,50 +22,20 @@
 
 #pragma once
 
-#include <filesystem>
+#include <exception>
+#include <string>
 
-#include <boost/asio.hpp>
+#include <plasma/extern.hpp>
 
-#include <plasma/config/config.h>
-#include <plasma/log.h>
-
-namespace plasma::config
+namespace plasma::networking::type
 {
-    class plasma_config : public config
+    class PLASMA_EXTERN varint_exception : public std::exception
     {
     private:
-        std::filesystem::path file_path_;
-        logger lg_;
+        std::string message_;
     public:
-        class
-        {
-        public:
-            bool color_logging;
-        } logging;
-
-        class
-        {
-        public:
-            class
-            {
-            public:
-                std::filesystem::path base_dir;
-                std::filesystem::path backup_dir;
-            } storage;
-            std::string name;
-        } world;
-
-        class
-        {
-        public:
-            std::string listen_address;
-            boost::asio::ip::port_type listen_port;
-        } networking;
-
-        plasma_config() noexcept;
-
-        void load() override;
-
-        void save() override;
+        explicit varint_exception(const char* message) noexcept;
+        explicit varint_exception(const std::string& message) noexcept;
+        const char* what() const noexcept override;
     };
 }

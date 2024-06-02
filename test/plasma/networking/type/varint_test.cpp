@@ -23,8 +23,8 @@
 #include <cstddef>
 #define BOOST_TEST_MODULE varint_test
 #include <boost/test/unit_test.hpp>
-#include <plasma/networking/type/varint.h>
-#include <plasma/log.h>
+#include <plasma/networking/type/varint.hpp>
+#include <plasma/log.hpp>
 #include <map>
 
 namespace
@@ -56,7 +56,7 @@ namespace
     std::byte varlong_9223372036854775807[]{ std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0x7f } };
     std::byte varlong__1[]{ std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0xff }, std::byte{ 0x7f } };
     std::byte varlong__9223372036854775808[]{ std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x80 }, std::byte{ 0x01 } };
-    std::map<int64_t, std::byte*> varlong_samples{ {
+    std::map<std::int64_t, std::byte*> varlong_samples{ {
         { 9223372036854775807ll, varlong_9223372036854775807 },
         { -1ll, varlong__1 },
         { -9223372036854775808ull, varlong__9223372036854775808 },
@@ -72,11 +72,11 @@ BOOST_AUTO_TEST_CASE(varint_read)
     {
         for (auto [i, varint] : varint_samples)
         {
-            BOOST_TEST(plasma::networking::type::read_varint(varint, 5) == i);
+            BOOST_TEST(plasma::networking::type::read_varint(varint, plasma::networking::type::varint_max_size) == i);
         }
         for (auto [i, varlong] : varlong_samples)
         {
-            BOOST_TEST(plasma::networking::type::read_varlong(varlong, 10) == i);
+            BOOST_TEST(plasma::networking::type::read_varlong(varlong, plasma::networking::type::varlong_max_size) == i);
         }
     }
     catch (plasma::networking::type::varint_exception& e)

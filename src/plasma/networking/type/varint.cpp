@@ -21,14 +21,14 @@
  */
 
 #include <cstdint>
-#include <plasma/networking/type/varint.h>
+#include <plasma/networking/type/varint.hpp>
 
 namespace plasma::networking::type
 {
-    int32_t read_varint(std::byte* data, std::size_t max_length)
+    std::int32_t read_varint(const std::byte* const data, const std::size_t max_length)
     {
-        int32_t value{};
-        int32_t position{};
+        std::int32_t value{};
+        std::int32_t position{};
         std::size_t i{};
         std::byte current{};
         while (true)
@@ -38,7 +38,7 @@ namespace plasma::networking::type
                 throw varint_exception{ "Failed to read varint: unexpected eof" };
             }
             current = data[i];
-            value |= static_cast<int32_t>(current & segment_bits) << position;
+            value |= static_cast<std::int32_t>(current & segment_bits) << position;
             if ((current & continue_bit) == std::byte{})
             {
                 break;
@@ -53,29 +53,10 @@ namespace plasma::networking::type
         return value;
     }
 
-    void write_varint(int32_t value, std::byte* data, std::size_t max_length)
+    std::int32_t read_varint(const std::byte* const data, std::size_t& length, const std::size_t max_length)
     {
-        std::size_t i{};
-        while (true)
-        {
-            if (i >= max_length)
-            {
-                throw varint_exception{ "Failed to write varint: unexpected eof" };
-            }
-            if ((value & ~static_cast<int32_t>(segment_bits)) == 0)
-            {
-                data[i] = static_cast<std::byte>(value);
-                return;
-            }
-            data[i] = static_cast<std::byte>((value & static_cast<int32_t>(segment_bits)) | static_cast<int32_t>(continue_bit));
-            value = static_cast<uint32_t>(value) >> 7;
-        }
-    }
-
-    int64_t read_varlong(std::byte* data, std::size_t max_length)
-    {
-        int64_t value{};
-        int32_t position{};
+        std::int32_t value{};
+        std::int32_t position{};
         std::size_t i{};
         std::byte current{};
         while (true)
@@ -85,7 +66,90 @@ namespace plasma::networking::type
                 throw varint_exception{ "Failed to read varint: unexpected eof" };
             }
             current = data[i];
-            value |= static_cast<int64_t>(current & segment_bits) << position;
+            value |= static_cast<std::int32_t>(current & segment_bits) << position;
+            if ((current & continue_bit) == std::byte{})
+            {
+                break;
+            }
+            position += 7;
+            if (position >= 32)
+            {
+                throw varint_exception{ "Failed to read varint: varint too big" };
+            }
+            i++;
+        }
+        length = i + 1;
+        return value;
+    }
+
+    std::size_t write_varint(std::int32_t value, std::byte* const data, const std::size_t max_length)
+    {
+        std::size_t i{};
+        while (true)
+        {
+            if (i >= max_length)
+            {
+                throw varint_exception{ "Failed to write varint: unexpected eof" };
+            }
+            if ((value & ~static_cast<std::int32_t>(segment_bits)) == 0)
+            {
+                data[i] = static_cast<std::byte>(value);
+                return i + 1;
+            }
+            data[i] = static_cast<std::byte>((value & static_cast<std::int32_t>(segment_bits)) | static_cast<std::int32_t>(continue_bit));
+            value = static_cast<std::uint32_t>(value) >> 7;
+            i++;
+        }
+    }
+
+    std::size_t get_varint_length(std::int32_t value)
+    {
+        std::size_t i{ 1 };
+        for (; (value & ~static_cast<std::int32_t>(segment_bits)) != 0; value = static_cast<std::uint32_t>(value) >> 7, i++)
+        {
+        }
+        return i;
+    }
+
+    std::size_t get_varint_length(const std::byte* const data, const std::size_t max_length)
+    {
+        std::int32_t position{};
+        std::size_t i{};
+        std::byte current{};
+        while (true)
+        {
+            if (i >= max_length)
+            {
+                throw varint_exception{ "Failed to read varint: unexpected eof" };
+            }
+            current = data[i];
+            if ((current & continue_bit) == std::byte{})
+            {
+                return i + 1;
+            }
+            position += 7;
+            if (position >= 32)
+            {
+                throw varint_exception{ "Failed to read varint: varint too big" };
+            }
+            i++;
+        }
+    }
+
+    std::int64_t read_varlong(const std::byte* const data, const std::size_t max_length)
+    {
+        std::int64_t value{};
+        std::int32_t position{};
+        std::size_t i{};
+        std::byte current{};
+        while (true)
+        {
+            if (i >= max_length)
+            {
+                throw varint_exception{ "Failed to read varint: unexpected eof" };
+            }
+            current = data[i];
+            value |= static_cast<std::int64_t>(current & segment_bits) << position;
             if ((current & continue_bit) == std::byte{})
             {
                 break;
@@ -100,7 +164,36 @@ namespace plasma::networking::type
         return value;
     }
 
-    void write_varlong(int64_t value, std::byte* data, std::size_t max_length)
+    std::int64_t read_varlong(const std::byte* const data, std::size_t& length, const std::size_t max_length)
+    {
+        std::int64_t value{};
+        std::int32_t position{};
+        std::size_t i{};
+        std::byte current{};
+        while (true)
+        {
+            if (i >= max_length)
+            {
+                throw varint_exception{ "Failed to read varint: unexpected eof" };
+            }
+            current = data[i];
+            value |= static_cast<std::int64_t>(current & segment_bits) << position;
+            if ((current & continue_bit) == std::byte{})
+            {
+                break;
+            }
+            position += 7;
+            if (position >= 64)
+            {
+                throw varint_exception{ "Failed to read varint: varint too big" };
+            }
+            i++;
+        }
+        length = i + 1;
+        return value;
+    }
+
+    std::size_t write_varlong(std::int64_t value, std::byte* const data, const std::size_t max_length)
     {
         std::size_t i{};
         while (true)
@@ -109,13 +202,48 @@ namespace plasma::networking::type
             {
                 throw varint_exception{ "Failed to write varint: unexpected eof" };
             }
-            if ((value & ~static_cast<int64_t>(segment_bits)) == 0)
+            if ((value & ~static_cast<std::int64_t>(segment_bits)) == 0)
             {
                 data[i] = static_cast<std::byte>(value);
-                return;
+                return i + 1;
             }
-            data[i] = static_cast<std::byte>((value & static_cast<int64_t>(segment_bits)) | static_cast<int64_t>(continue_bit));
-            value = static_cast<uint64_t>(value) >> 7;
+            data[i] = static_cast<std::byte>((value & static_cast<std::int64_t>(segment_bits)) | static_cast<std::int64_t>(continue_bit));
+            value = static_cast<std::uint64_t>(value) >> 7;
+            i++;
+        }
+    }
+
+    std::size_t get_varlong_length(std::int64_t value)
+    {
+        std::size_t i{ 1 };
+        for (; (value & ~static_cast<std::int64_t>(segment_bits)) != 0; value = static_cast<std::uint64_t>(value) >> 7, i++)
+        {
+        }
+        return i;
+    }
+
+    std::size_t get_varlong_length(const std::byte* const data, const std::size_t max_length)
+    {
+        std::int32_t position{};
+        std::size_t i{};
+        std::byte current{};
+        while (true)
+        {
+            if (i >= max_length)
+            {
+                throw varint_exception{ "Failed to read varint: unexpected eof" };
+            }
+            current = data[i];
+            if ((current & continue_bit) == std::byte{})
+            {
+                return i + 1;
+            }
+            position += 7;
+            if (position >= 64)
+            {
+                throw varint_exception{ "Failed to read varint: varint too big" };
+            }
+            i++;
         }
     }
 }

@@ -22,20 +22,25 @@
 
 #pragma once
 
-#include <plasma/plugin/plugin_manager.h>
-#include <plasma/plugin/plugin_descriptor.h>
-#include <plasma/extern.h>
-#include <semver.hpp>
+#include <cstdint>
+#include <memory>
+#include <cstddef>
+#include <plasma/networking/type/varint.hpp>
+#include <plasma/extern.hpp>
 
-namespace plasma::plugin
+namespace plasma::networking::type
 {
-    class plugin_manager;
-    class PLASMA_EXTERN plugin
+    class PLASMA_EXTERN packet
     {
     public:
-        virtual const plugin_descriptor& get_descriptor() noexcept = 0;
-        virtual void initialize(plugin_manager&) = 0;
-        virtual ~plugin();
+        const std::size_t head_length;
+        const std::size_t body_length;
+        const std::size_t total_length;
+        const std::int32_t packet_id;
+        // Whole packet data including head
+        const std::unique_ptr<std::byte[]> data;
+        packet(const std::size_t body_length, const std::int32_t packet_id, const std::byte* const body);
+        packet(const std::size_t head_length, const std::size_t body_length, const std::int32_t packet_id, const std::byte* const data);
+        packet(const packet& other);
     };
 }
-

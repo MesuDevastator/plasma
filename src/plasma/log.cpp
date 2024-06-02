@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include <plasma/log.h>
+#include <plasma/log.hpp>
 
 #include <filesystem>
 
@@ -109,8 +109,9 @@ namespace plasma::log
 #else
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 #endif
-        boost::log::core::get()->add_thread_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
-        boost::log::core::get()->add_thread_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
+        boost::log::core::get()->add_global_attribute("Severity", boost::log::attributes::mutable_constant<boost::log::trivial::severity_level>(boost::log::trivial::severity_level::info));
+        boost::log::core::get()->add_global_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
+        boost::log::core::get()->add_global_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
         boost::log::core::get()->add_sink(console_sink);
         boost::log::core::get()->add_sink(file_sink);
         logging_initialized = true;
@@ -127,8 +128,9 @@ namespace plasma::log
         console_sink->set_formatter(&color_formatter);
         console_sink->locked_backend()->add_stream(plasma::log::clog_stream_ptr);
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
-        boost::log::core::get()->add_thread_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
-        boost::log::core::get()->add_thread_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
+        boost::log::core::get()->add_global_attribute("Severity", boost::log::attributes::mutable_constant<boost::log::trivial::severity_level>(boost::log::trivial::severity_level::info));
+        boost::log::core::get()->add_global_attribute("File", boost::log::attributes::mutable_constant<const char*>(""));
+        boost::log::core::get()->add_global_attribute("Line", boost::log::attributes::mutable_constant<int>(0));
         boost::log::core::get()->add_sink(console_sink);
         logging_initialized = true;
     }

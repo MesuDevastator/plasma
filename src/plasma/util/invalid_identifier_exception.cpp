@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include <plasma/util/invalid_identifier_exception.h>
+#include <plasma/util/invalid_identifier_exception.hpp>
 
 namespace plasma::util
 {

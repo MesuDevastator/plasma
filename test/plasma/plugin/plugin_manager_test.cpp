@@ -22,9 +22,9 @@
 
 #define BOOST_TEST_MODULE plugin_manager_test
 #include <boost/test/unit_test.hpp>
-#include <plasma/plugin/plugin_manager.h>
-#include <plasma/plugin/plugin_loading_exception.h>
-#include <plasma/log.h>
+#include <plasma/plugin/plugin_manager.hpp>
+#include <plasma/plugin/plugin_loading_exception.hpp>
+#include <plasma/log.hpp>
 #include <semver.hpp>
 
 constexpr auto depended_test_plugin_name{ "depended_test_plugin" };

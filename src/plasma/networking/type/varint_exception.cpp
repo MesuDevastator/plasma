@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-#include <plasma/networking/type/varint_exception.h>
+#include <plasma/networking/type/varint_exception.hpp>
 
 namespace plasma::networking::type
 {

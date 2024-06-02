@@ -23,8 +23,8 @@
 #define BOOST_TEST_MODULE directory_lock_test
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
-#include <plasma/util/directory_lock.h>
-#include <plasma/log.h>
+#include <plasma/util/directory_lock.hpp>
+#include <plasma/log.hpp>
 
 BOOST_AUTO_TEST_SUITE(directory_lock_test)
 

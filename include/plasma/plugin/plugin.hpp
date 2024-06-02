@@ -22,20 +22,20 @@
 
 #pragma once
 
-#include <exception>
-#include <string>
+#include <plasma/plugin/plugin_manager.hpp>
+#include <plasma/plugin/plugin_descriptor.hpp>
+#include <plasma/extern.hpp>
+#include <semver.hpp>
 
-#include <plasma/extern.h>
-
-namespace plasma::networking::type
+namespace plasma::plugin
 {
-    class PLASMA_EXTERN varint_exception : public std::exception
+    class plugin_manager;
+    class PLASMA_EXTERN plugin
     {
-    private:
-        std::string message_;
     public:
-        explicit varint_exception(const char* message) noexcept;
-        explicit varint_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
+        virtual const plugin_descriptor& get_descriptor() noexcept = 0;
+        virtual void initialize(plugin_manager&) = 0;
+        virtual ~plugin();
     };
 }
+

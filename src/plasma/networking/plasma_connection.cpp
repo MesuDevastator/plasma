@@ -20,34 +20,48 @@
  * SOFTWARE.
  */
 
+
 #include <algorithm>
 #include <cstddef>
-#include <plasma/networking/plasma_connection.h>
-#include <plasma/plasma_server.h>
-#include <sstream>
+#include <plasma/networking/plasma_connection.hpp>
+#include <plasma/plasma_server.hpp>
 
 #include <fmt/format.h>
 
 namespace plasma::networking
 {
-    plasma_connection::packet_node::packet_node(std::byte* const data, const std::size_t max_length) noexcept :
-        max_length_{ max_length }, data_{ std::make_unique<std::byte[]>(max_length) }
-    {
-        std::copy(data, data + max_length, data_.get());
-    }
-
-    void plasma_connection::handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, pointer self)
+    void plasma_connection::handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, [[maybe_unused]] pointer self)
     {
         if (!error)
         {
-            std::stringstream ss{ "Received data: " };
-            for (std::size_t i{}; i < bytes_transferred; i++)
+            std::size_t packet_id_length{};
+            auto packet_id{ type::read_varint(raw_buffer_.get() + cursor, packet_id_length, bytes_transferred) };
+            DBG(lg_) << "Packet ID " << packet_id;
+            type::packet packet{ cursor + packet_id_length, bytes_transferred - packet_id_length, packet_id, raw_buffer_.get() + cursor + packet_id_length };
+            std::fill(raw_buffer_.get(), raw_buffer_.get() + cursor + bytes_transferred, std::byte{});
+            start_read();
+        }
+        else
+        {
+            ERR(lg_) << fmt::format("Failed to read connection {}, error \"{}\"", to_string(uuid_), error.what());
+            kill();
+        }
+    }
+
+    void plasma_connection::handle_read_head(const boost::system::error_code& error, [[maybe_unused]] const std::size_t bytes_transferred, const std::size_t cursor, pointer self)
+    {
+        if (!error)
+        {
+            if ((raw_buffer_[cursor] & type::continue_bit) == std::byte{})
             {
-                ss << static_cast<unsigned char>(raw_buffer_[i]) << " ";
+                const auto length{ type::read_varint(raw_buffer_.get()) };
+                DBG(lg_) << "Packet length " << length;
+                async_read(socket_, boost::asio::buffer(raw_buffer_.get() + cursor + 1, length), std::bind(&plasma_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2, cursor + 1, self));
             }
-            DBG(lg_) << ss.str();
-            std::fill(raw_buffer_.get(), raw_buffer_.get() + bytes_transferred, std::byte{ 0 });
-            socket_.async_read_some(boost::asio::buffer(raw_buffer_.get(), max_raw_packet_length), std::bind(&plasma_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2, self));
+            else
+            {
+                async_read(socket_, boost::asio::buffer(raw_buffer_.get() + cursor + 1, 1), std::bind(&plasma_connection::handle_read_head, this, std::placeholders::_1, std::placeholders::_2, cursor + 1, self));
+            }
         }
         else
         {
@@ -64,8 +78,8 @@ namespace plasma::networking
             send_queue_.pop();
             if (!send_queue_.empty())
             {
-                auto& node{ send_queue_.front() };
-                async_write(socket_, boost::asio::buffer(node.data_.get(), node.max_length_), std::bind(&plasma_connection::handle_write, this, std::placeholders::_1, self));
+                auto& packet{ send_queue_.front() };
+                async_write(socket_, boost::asio::buffer(packet.data.get(), packet.total_length), std::bind(&plasma_connection::handle_write, this, std::placeholders::_1, self));
             }
         }
         else
@@ -95,33 +109,36 @@ namespace plasma::networking
         return uuid_;
     }
 
+    void plasma_connection::start_read()
+    {
+        async_read(socket_, boost::asio::buffer(raw_buffer_.get(), 1), std::bind(&plasma_connection::handle_read_head, this, std::placeholders::_1, std::placeholders::_2, 0, shared_from_this()));
+    }
+
     void plasma_connection::start()
     {
         INF(lg_) << fmt::format("Incoming TCP connection from {}:{}, connection uuid {}", socket_.remote_endpoint().address().to_string(), socket_.remote_endpoint().port(), to_string(uuid_));
-        socket_.async_read_some(boost::asio::buffer(raw_buffer_.get(), max_raw_packet_length), std::bind(&plasma_connection::handle_read, this, std::placeholders::_1, std::placeholders::_2, shared_from_this()));
+        start_read();
     }
 
     void plasma_connection::kill()
     {
         DBG(lg_) << "Killing connection " << to_string(uuid_);
         server_.remove_connection(uuid_);
+        socket_.cancel();
         socket_.shutdown(boost::asio::socket_base::shutdown_both);
-        socket_.close();
     }
 
-    void plasma_connection::send(std::byte* const data, const std::size_t max_length)
+    void plasma_connection::send(const type::packet& packet)
     {
-        bool pending{};
         std::lock_guard<std::mutex> lock{ send_lock_ };
-        if (send_queue_.size() > 0)
-        {
-            pending = true;
-        }
-        send_queue_.push(packet_node{ data, max_length });
-        if (pending)
-        {
-            return;
-        }
-        async_write(socket_, boost::asio::buffer(data, max_length), std::bind(&plasma_connection::handle_write, this, std::placeholders::_1, shared_from_this()));
+        send_queue_.push(packet);
+        auto& new_packet{ send_queue_.front() };
+        async_write(socket_, boost::asio::buffer(new_packet.data.get(), new_packet.total_length), std::bind(&plasma_connection::handle_write, this, std::placeholders::_1, shared_from_this()));
+    }
+
+    plasma_connection::~plasma_connection()
+    {
+        TRC(lg_) << "Destructing connection " << to_string(uuid_);
+        socket_.close();
     }
 }

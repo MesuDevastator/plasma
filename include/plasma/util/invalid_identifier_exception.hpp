@@ -22,25 +22,20 @@
 
 #pragma once
 
-#include <filesystem>
-#include <fstream>
+#include <exception>
+#include <string>
 
-#include <plasma/extern.h>
+#include <plasma/extern.hpp>
 
 namespace plasma::util
 {
-    class PLASMA_EXTERN directory_lock
+    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
     {
     private:
-        std::ofstream lock_file_;
-        std::filesystem::path lock_file_path_;
+        std::string message_;
     public:
-        static constexpr auto directory_lock_name{ "session.lock" };
-
-        explicit directory_lock(std::filesystem::path directory);
-
-        static bool is_locked(std::filesystem::path directory);
-
-        ~directory_lock();
+        explicit invalid_identifier_exception(const char* message) noexcept;
+        explicit invalid_identifier_exception(const std::string& message) noexcept;
+        const char* what() const noexcept override;
     };
 }

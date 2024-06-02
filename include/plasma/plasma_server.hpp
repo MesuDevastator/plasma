@@ -23,40 +23,41 @@
 #pragma once
 
 #include <map>
+#include <mutex>
 #include <boost/program_options.hpp>
 #include <boost/asio.hpp>
 #include <boost/uuid.hpp>
 
-#include <plasma/networking/plasma_connection.h>
-#include <plasma/config/plasma_config.h>
-#include <plasma/plugin/plugin.h>
-#include <plasma/log.h>
+#include <plasma/networking/plasma_connection.hpp>
+#include <plasma/config/plasma_config.hpp>
+#include <plasma/plugin/plugin.hpp>
+#include <plasma/log.hpp>
 
-#include <plasma/version.h>
+#include <plasma/version.hpp>
 
 namespace plasma
 {
     class PLASMA_EXTERN plasma_server : public plasma::plugin::plugin
     {
     private:
+        logger lg_;
         plasma::config::plasma_config config_;
         boost::program_options::variables_map vm_;
         plasma::plugin::plugin_descriptor descriptor_;
-        logger lg_;
         boost::asio::io_context context_;
         boost::asio::ip::tcp::acceptor acceptor_;
         std::map<boost::uuids::uuid, plasma::networking::plasma_connection::pointer> connections_;
+        std::mutex connections_lock_;
         void start_accept();
         void handle_accept(plasma::networking::plasma_connection::pointer connection, const boost::system::error_code& error);
     public:
+        static constexpr auto name{ "plasma::server" };
         explicit plasma_server(const boost::program_options::variables_map& vm);
-
         const plasma::plugin::plugin_descriptor& get_descriptor() noexcept override;
-
         void initialize(plasma::plugin::plugin_manager& manager) override;
-
-        void remove_connection(const boost::uuids::uuid& uuid);
-
+        std::size_t remove_connection(const boost::uuids::uuid& uuid);
+        void start();
+        void stop();
         ~plasma_server();
     };
 }

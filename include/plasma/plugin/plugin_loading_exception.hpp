@@ -25,7 +25,7 @@
 #include <exception>
 #include <string>
 
-#include <plasma/extern.h>
+#include <plasma/extern.hpp>
 
 namespace plasma::plugin
 {

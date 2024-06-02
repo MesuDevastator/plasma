@@ -23,14 +23,14 @@
 #include <filesystem>
 
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/info_parser.hpp>
+#include <yaml_parser.hpp>
 
-#include <plasma/config/plasma_config.h>
+#include <plasma/config/plasma_config.hpp>
 
 namespace plasma::config
 {
     plasma_config::plasma_config() noexcept :
-        file_path_{ "./configs/plasma.info" },
+        file_path_{ "./configs/plasma.yaml" },
         logging
         {
             .color_logging = true
@@ -62,7 +62,7 @@ namespace plasma::config
             return;
         }
         boost::property_tree::ptree tree{};
-        boost::property_tree::read_info(file_path_.string(), tree);
+        yaml_parser::read_yaml(file_path_.string(), tree);
 
         logging.color_logging = tree.get<bool>("logging.color_logging", logging.color_logging);
 
@@ -91,6 +91,6 @@ namespace plasma::config
         tree.put("networking.listen_port", networking.listen_port);
 
         create_directories(file_path_.parent_path());
-        write_info(file_path_.string(), tree);
+        yaml_parser::write_yaml(file_path_.string(), tree);
     }
 }
