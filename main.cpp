@@ -26,7 +26,6 @@
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <thread>
 
 #include <boost/program_options.hpp>
 #include <fmt/format.h>

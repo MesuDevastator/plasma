@@ -6,7 +6,7 @@ __________.__
  |____|   |____(____  /____  >__|_|  (____  /
                     \/     \/      \/     \/
 ```
-# Plasma [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/MesuDevastator/plasma/blob/master-1.16.5/LICENSE)
+# Plasma [![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/MesuDevastator/plasma/blob/master/LICENSE)
 
 
 Plasma is a project to reimplement Minecraft Server using C++
