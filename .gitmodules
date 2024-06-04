@@ -16,9 +16,6 @@
 [submodule "lib/yaml_parser"]
 	path = lib/yaml_parser
 	url = https://github.com/ayamadev/yaml_parser.git
-[submodule "lib/yaml_cpp"]
-	path = lib/yaml_cpp
-	url = https://github.com/jbeder/yaml-cpp.git
 [submodule "lib/yaml-cpp"]
 	path = lib/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git

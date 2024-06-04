@@ -21,7 +21,6 @@
  */
 
 
-#include "plasma/networking/type/varint.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
