@@ -35,6 +35,7 @@ namespace plasma::plugin
 
     void plugin_manager::register_plugin(plugin* plugin)
     {
+        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
         if (plugin == nullptr)
         {
             throw plugin_loading_exception{ "Trying to register a null plugin" };
@@ -51,6 +52,7 @@ namespace plasma::plugin
 
     void plugin_manager::initialize_plugins()
     {
+        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
         for (auto& [_, plugin] : plugins_)
         {
             if (plugin->initialized_)
@@ -112,6 +114,7 @@ namespace plasma::plugin
 
     std::size_t plugin_manager::unload_plugin(const std::string& name)
     {
+        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
         const auto hash{ std::hash<std::string>{}(name) };
         if (plugins_.at(hash))  // throws std::out_of_range if not found
         {

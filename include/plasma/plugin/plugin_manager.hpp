@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include <plasma/plugin/plugin.hpp>
 #include <plasma/extern.hpp>
@@ -38,6 +39,7 @@ namespace plasma::plugin
     private:
         logger lg_;
         std::map<std::size_t, std::shared_ptr<plugin>> plugins_;
+        std::mutex plugin_mutex_;
     public:
         plugin_manager();
         plugin_manager(const plugin_manager&) = delete;

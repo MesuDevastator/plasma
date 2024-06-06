@@ -49,6 +49,7 @@ namespace
         R"( |____|   |____(____  /____  >__|_|  (____  /)""\n"
         R"(                    \/     \/      \/     \/ )""\n" };
     std::unique_ptr<plasma::plugin::plugin_manager> manager;
+    std::thread server_thread;  // using a separate thread so that plasma_server is destructed normally (std::shared_ptr is destructed normally)
 
 #if CXX_OS_WINDOWS
     bool enable_ansi_support() noexcept
@@ -143,6 +144,7 @@ int main(const int argc, const char* argv[])
     manager->initialize_plugins();
     std::atexit([]{
         dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->stop();
+        server_thread.join();
     });
     auto handler{
         [](const int signal){
@@ -161,6 +163,7 @@ int main(const int argc, const char* argv[])
     {
         TRC(lg) << "Set signal handler";
     }
-    dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->start();
+    server_thread = std::thread{ []{ dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->start(); } };
+    server_thread.join();
     return 0;
 }
