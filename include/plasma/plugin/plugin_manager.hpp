@@ -37,13 +37,14 @@ namespace plasma::plugin
     {
     private:
         logger lg_;
-        std::map<std::size_t, std::pair<std::unique_ptr<plugin>, bool>> plugins_;
+        std::map<std::size_t, std::shared_ptr<plugin>> plugins_;
     public:
         plugin_manager();
+        plugin_manager(const plugin_manager&) = delete;
         void register_plugin(plugin* plugin);
         void initialize_plugins();
         std::size_t unload_plugin(const std::string& name);
-        const std::unique_ptr<plugin>& get_plugin(const std::string& name) const;
+        std::shared_ptr<plugin> get_plugin(const std::string& name) const;
     };
 }
 

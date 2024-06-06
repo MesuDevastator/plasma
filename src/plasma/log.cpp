@@ -104,7 +104,7 @@ namespace plasma::log
         file_sink->set_formatter(formatter);
         file_sink->locked_backend()->set_file_collector(boost::log::sinks::file::make_collector(boost::log::keywords::target = "./logs"));
         file_sink->locked_backend()->scan_for_files();
-#if !defined(NDEBUG) || defined(_DEBUG)
+#if defined(PLASMA_ALWAYS_TRACE) || !defined(NDEBUG) || defined(_DEBUG)
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 #else
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);

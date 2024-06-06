@@ -40,68 +40,68 @@ namespace plasma::plugin
             throw plugin_loading_exception{ "Trying to register a null plugin" };
         }
         INF(lg_) << "Registering plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
-        std::size_t hash{ std::hash<std::string>{}(plugin->get_descriptor().name) };
+        const auto hash{ std::hash<std::string>{}(plugin->get_descriptor().name) };
         TRC(lg_) << "Plugin " << plugin->get_descriptor().name << " name hash \"" << std::hex << hash << std::dec << "\"";
         if (plugins_.contains(hash))
         {
             throw plugin_loading_exception{ "Trying to register a duplicated plugin" };
         }
-        plugins_.insert(std::pair{ hash, std::pair{ std::unique_ptr<class plugin>{ plugin }, false } });
+        plugins_.insert(std::pair{ hash, std::shared_ptr<class plugin>{ plugin } });
     }
 
     void plugin_manager::initialize_plugins()
     {
         for (auto& [_, plugin] : plugins_)
         {
-            if (plugin.second)
+            if (plugin->initialized_)
             {
                 continue;
             }
-            for (const auto& conflict : plugin.first->get_descriptor().conflicts)
+            for (const auto& conflict : plugin->get_descriptor().conflicts)
             {
                 if (plugins_.contains(std::hash<std::string>{}(conflict.name)))
                 {
-                    ERR(lg_) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name, plugin.first->get_descriptor().name);
+                    ERR(lg_) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name, plugin->get_descriptor().name);
                     throw plugin_loading_exception{ "Plugin conflict detected" };
                 }
             }
             auto initialize{
-                [this](auto&& self, auto& plugin) -> void
+                [this](auto&& self, auto plugin) -> void
                 {
-                    if (plugin.second)
+                    if (plugin->initialized_)
                     {
                         return;
                     }
-                    plugin.second = true;   // To prevent infinite recursion
-                    INF(lg_) << "Initializing plugin " << plugin.first->get_descriptor().name << " " << plugin.first->get_descriptor().version;
+                    plugin->initialized_ = true;   // To prevent infinite recursion
+                    INF(lg_) << "Initializing plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
                     try
                     {
-                        for (const auto& dependency : plugin.first->get_descriptor().dependencies)
+                        for (const auto& dependency : plugin->get_descriptor().dependencies)
                         {
-                            std::size_t hash{ std::hash<std::string>{}(dependency.name) };
+                            const auto hash{ std::hash<std::string>{}(dependency.name) };
                             if (!plugins_.contains(hash))
                             {
-                                ERR(lg_) << fmt::format("Dependency plugin {} not found while loading {}", dependency.name, plugin.first->get_descriptor().name);
+                                ERR(lg_) << fmt::format("Dependency plugin {} not found while loading {}", dependency.name, plugin->get_descriptor().name);
                                 throw plugin_loading_exception{ "Plugin dependency not found" };
                             }
-                            self(self, plugins_.at(hash));   // Throws std::out_of_range if dependency not found
+                            self(self, plugins_[hash]);   // Throws std::out_of_range if dependency not found
                         }
-                        for (const auto& optional_dependency : plugin.first->get_descriptor().optional_dependencies)
+                        for (const auto& optional_dependency : plugin->get_descriptor().optional_dependencies)
                         {
-                            if (plugins_.contains(std::hash<std::string>{}(optional_dependency.name)))
+                            if (const auto hash{ std::hash<std::string>{}(optional_dependency.name) }; plugins_.contains(hash))
                             {
-                                self(self, plugins_[std::hash<std::string>{}(optional_dependency.name)]);
+                                self(self, plugins_[hash]);
                             }
                             else
                             {
                                 WRN(lg_) << "Optional dependency " << optional_dependency.name << " not found";
                             }
                         }
-                        plugin.first->initialize(*this);
+                        plugin->initialize(*this);
                     }
                     catch (...)
                     {
-                        plugin.second = false;
+                        plugin->initialized_= false;
                         throw;
                     }
                 }
@@ -112,13 +112,12 @@ namespace plasma::plugin
 
     std::size_t plugin_manager::unload_plugin(const std::string& name)
     {
-        std::hash<std::string> hasher{};
-        std::size_t hash{ hasher(name) };
-        if (plugins_.at(hash).second)
+        const auto hash{ std::hash<std::string>{}(name) };
+        if (plugins_.at(hash))  // throws std::out_of_range if not found
         {
             for (const auto& [_, plugin] : plugins_)
             {
-                for (const auto& dependency : plugin.first->get_descriptor().dependencies)
+                for (const auto& dependency : plugin->get_descriptor().dependencies)
                 {
                     if (dependency.name == name)
                     {
@@ -130,9 +129,9 @@ namespace plasma::plugin
         return plugins_.erase(hash);
     }
 
-    const std::unique_ptr<plugin>& plugin_manager::get_plugin(const std::string& name) const
+    std::shared_ptr<plugin> plugin_manager::get_plugin(const std::string& name) const
     {
-        return plugins_.at(std::hash<std::string>{}(name)).first;
+        return plugins_.at(std::hash<std::string>{}(name));     // Copies the shared_ptr
     }
 }
 

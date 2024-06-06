@@ -23,22 +23,23 @@
 #include <cxx_detect.h>
 #include <csignal>
 #include <cstdlib>
+#include <handleapi.h>
 #include <iostream>
 #include <exception>
 #include <memory>
+#include <mutex>
 
 #include <boost/program_options.hpp>
 #include <fmt/format.h>
 
-#if CXX_OS_WINDOWS
-#include <windows.h>
-#endif
-
 #include <plasma/version.hpp>
-
 #include <plasma/log.hpp>
 #include <plasma/plugin/plugin_manager.hpp>
 #include <plasma/plasma_server.hpp>
+
+#if CXX_OS_WINDOWS
+#include <windows.h>
+#endif
 
 namespace
 {
@@ -50,22 +51,54 @@ namespace
         R"( |____|   |____(____  /____  >__|_|  (____  /)""\n"
         R"(                    \/     \/      \/     \/ )""\n" };
     std::unique_ptr<plasma::plugin::plugin_manager> manager;
+
+#if CXX_OS_WINDOWS
+    bool enable_ansi_support() noexcept
+    {
+        const auto out{ GetStdHandle(STD_OUTPUT_HANDLE) };
+        if (out == INVALID_HANDLE_VALUE)
+        {
+            return false;
+        }
+        DWORD mode{};
+        if (!GetConsoleMode(out, &mode))
+        {
+            return false;
+        }
+        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(out, mode))
+        {
+            return false;
+        }
+        return true;
+    }
+#endif
 }
 
 int main(const int argc, const char* argv[])
 {
-    using namespace std::literals::chrono_literals;
+    using namespace std::chrono_literals;
 #if CXX_OS_WINDOWS
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 #endif
     setlocale(LC_ALL, ".utf-8");
-#ifndef PLASMA_NOLOGO
+#if !defined(PLASMA_NOLOGO)
     std::cout << plasma_logo;
 #endif
-
     plasma::log::initialize_logging_system();
     logger lg{};
+#if CXX_OS_WINDOWS
+    if (!enable_ansi_support())
+    {
+        plasma::log::color_enabled = false;
+        WRN(lg) << "Failed to enable ANSI escape sequence support, colored logging is disabled";
+    }
+    else
+    {
+        TRC(lg) << "Enabled ANSI escape sequence support";
+    }
+#endif
     TRC(lg) << "Logging system initialized";
 
     INF(lg) << plasma::full_version;

@@ -43,7 +43,7 @@ namespace plasma::log
 {
     extern boost::shared_ptr<std::ostream> clog_stream_ptr;
     extern bool logging_initialized;
-    extern bool color_enabled;
+    PLASMA_EXTERN extern bool color_enabled;
 
     template<typename TValue>
     void set_attr(const char* name, TValue value)

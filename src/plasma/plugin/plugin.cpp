@@ -24,6 +24,9 @@
 
 namespace plasma::plugin
 {
+    plugin::plugin() noexcept : initialized_{}
+    {
+    }
     plugin::~plugin() = default;
 }
 
