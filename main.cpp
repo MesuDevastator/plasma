@@ -23,11 +23,9 @@
 #include <cxx_detect.h>
 #include <csignal>
 #include <cstdlib>
-#include <handleapi.h>
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <mutex>
 
 #include <boost/program_options.hpp>
 #include <fmt/format.h>
