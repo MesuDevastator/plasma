@@ -43,6 +43,7 @@ namespace plasma::networking
                 DBG(lg_) << fmt::format("Connection {} >> Packet {}: ID {}", to_string(uuid_), packet_seq_, packet_id);
                 std::copy(head_buffer_.get(), head_buffer_.get() + length_length, body_buffer_.get());
                 type::packet packet{ length_length + packet_id_length, bytes_transferred - packet_id_length, packet_id, body_buffer_.get() };
+                body_buffer_.reset();
                 packet_seq_++;
                 packet.process(*this);
             }
@@ -122,7 +123,7 @@ namespace plasma::networking
     }
 
     plasma_connection::plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid) :
-        killed_{}, server_{ server }, socket_{ io_context }, uuid_{ uuid }, head_buffer_{ std::make_unique<std::byte[]>(type::varint_max_size) }, packet_seq_{ 1 }, status_{ type::connection_status::handshake }
+        killed_{}, server_{ server }, socket_{ io_context }, uuid_{ uuid }, head_buffer_{ std::make_unique<std::byte[]>(type::varint_max_size) }, body_buffer_{}, packet_seq_{ 1 }, status_{ type::connection_status::handshake }
     {
     }
 

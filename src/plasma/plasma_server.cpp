@@ -72,11 +72,6 @@ namespace plasma
     void plasma_server::initialize(plasma::plugin::plugin_manager&)
     {
         config_.load();
-        if (vm_.count("init"))
-        {
-            INF(lg_) << "Initialized configurations";
-            return;
-        }
         if (!vm_.count("color") && !config_.logging.color_logging)
         {
             plasma::log::color_enabled = false;

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.29)
 project(Plasma LANGUAGES CXX)
 option(PLASMA_NOLOGO "Disable Plasma logo" OFF)
 option(PLASMA_ALWAYS_TRACE "Use trace logging even in release builds" OFF)
@@ -36,7 +36,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -Wextra -fstack-protector-strong -fvisibility=hidden -fPIE")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -fstack-protector-strong -fvisibility=hidden -fPIE")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wall -Wextra -fstack-protector-strong -fvisibility=hidden -fPIE")
-    if(${CMAKE_BUILD_TYPE} STREQUAL "Release" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+    if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         add_compile_definitions(_FORTIFY_SOURCE=2)
     endif()
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

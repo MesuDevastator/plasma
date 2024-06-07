@@ -110,7 +110,7 @@ int main(const int argc, const char* argv[])
         }
         DBG(lg) << "Console argument: " << ss.str();
     }
-    boost::program_options::options_description desc{ "Plasma: Usage" };
+    boost::program_options::options_description desc{ "Plasma Usage" };
     desc.add_options()
         ("help", "Show the help")
         ("version", "Show the version only")
@@ -140,8 +140,13 @@ int main(const int argc, const char* argv[])
     }
 
     manager = std::make_unique<plasma::plugin::plugin_manager>();
-    manager->register_plugin(new plasma::plasma_server{ std::move(vm) });
+    manager->register_plugin(new plasma::plasma_server{ vm });
     manager->initialize_plugins();
+    if (vm.count("init"))
+    {
+        INF(lg) << "Initialized configurations";
+        return 0;
+    }
     std::atexit([]{
         dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->stop();
         server_thread.join();
