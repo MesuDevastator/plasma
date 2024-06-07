@@ -23,24 +23,40 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <cstddef>
+#include <memory>
 #include <plasma/networking/type/varint.hpp>
+#include <plasma/networking/type/connection_status.hpp>
 #include <plasma/extern.hpp>
 
-namespace plasma::networking::type
+namespace plasma::networking
 {
-    class PLASMA_EXTERN packet
+    class plasma_connection;
+    namespace type
     {
-    public:
-        const std::size_t head_length;
-        const std::size_t body_length;
-        const std::size_t total_length;
-        const std::int32_t packet_id;
-        // Whole packet data including head
-        const std::unique_ptr<std::byte[]> data;
-        packet(const std::size_t body_length, const std::int32_t packet_id, const std::byte* const body);
-        packet(const std::size_t head_length, const std::size_t body_length, const std::int32_t packet_id, const std::byte* const data);
-        packet(const packet& other);
-    };
+        class PLASMA_EXTERN packet
+        {
+        public:
+            const std::size_t head_length;
+            const std::size_t body_length;
+            const std::size_t total_length;
+            const std::int32_t packet_id;
+            // Whole packet data including head
+            const std::unique_ptr<std::byte[]> data;
+            packet(const std::size_t body_length, const std::int32_t packet_id, const std::byte* const body);
+            packet(const std::size_t head_length, const std::size_t body_length, const std::int32_t packet_id, const std::byte* const data);
+            packet(const packet& other);
+            void process(plasma::networking::plasma_connection& connection);
+
+            class PLASMA_EXTERN handshake_packet
+            {
+            public:
+                std::int32_t protocol_version;
+                std::u8string server_address;
+                std::uint16_t server_port;
+                std::int32_t next_state;
+                static handshake_packet parse(const std::byte* const body, const std::size_t max_length);
+            };
+        };
+    }
 }

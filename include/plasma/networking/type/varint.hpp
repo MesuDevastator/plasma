@@ -38,9 +38,13 @@ namespace plasma::networking::type
     PLASMA_EXTERN std::size_t write_varint(std::int32_t value, std::byte* const data, const std::size_t max_length = varint_max_size);
     PLASMA_EXTERN std::size_t get_varint_length(std::int32_t value);
     PLASMA_EXTERN std::size_t get_varint_length(const std::byte* const data, const std::size_t max_length = varint_max_size);
+
     PLASMA_EXTERN std::int64_t read_varlong(const std::byte* const data, const std::size_t max_length = varlong_max_size);
     PLASMA_EXTERN std::int64_t read_varlong(const std::byte* const data, std::size_t& length, const std::size_t max_length = varlong_max_size);
     PLASMA_EXTERN std::size_t write_varlong(std::int64_t value, std::byte* const data, const std::size_t max_length = varlong_max_size);
     PLASMA_EXTERN std::size_t get_varlong_length(std::int64_t value);
     PLASMA_EXTERN std::size_t get_varlong_length(const std::byte* const data, const std::size_t max_length = varlong_max_size);
+
+    PLASMA_EXTERN std::uint16_t read_ushort(const std::byte* const data, const std::size_t max_length = sizeof(std::uint16_t));
+    PLASMA_EXTERN std::int64_t read_long(const std::byte* const data, const std::size_t max_length = sizeof(std::int64_t));
 }

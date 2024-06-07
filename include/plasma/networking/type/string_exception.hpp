@@ -27,13 +27,13 @@
 
 namespace plasma::networking::type
 {
-    class PLASMA_EXTERN varint_exception : public type_exception
+    class PLASMA_EXTERN string_exception : public type_exception
     {
     private:
         std::string message_;
     public:
-        explicit varint_exception(const char* message) noexcept;
-        explicit varint_exception(const std::string& message) noexcept;
+        explicit string_exception(const char* message) noexcept;
+        explicit string_exception(const std::string& message) noexcept;
         const char* what() const noexcept override;
     };
 }

@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <bit>
 #include <cstdint>
 #include <plasma/networking/type/varint.hpp>
 
@@ -245,5 +246,33 @@ namespace plasma::networking::type
             }
             i++;
         }
+    }
+
+    std::uint16_t read_ushort(const std::byte* const data, const std::size_t max_length)
+    {
+        if (max_length < sizeof(std::uint16_t))
+        {
+            throw varint_exception{ "Failed to read ushort: unexpected eof" };
+        }
+        const auto value{ *reinterpret_cast<const std::uint16_t*>(data) };
+        if constexpr (std::endian::native == std::endian::little)
+        {
+            return std::byteswap(value);
+        }
+        return value;
+    }
+
+    std::int64_t read_long(const std::byte* const data, const std::size_t max_length)
+    {
+        if (max_length < sizeof(std::int64_t))
+        {
+            throw varint_exception{ "Failed to read long: unexpected eof" };
+        }
+        const auto value{ *reinterpret_cast<const std::int64_t*>(data) };
+        if constexpr (std::endian::native == std::endian::little)
+        {
+            return std::byteswap(value);
+        }
+        return value;
     }
 }

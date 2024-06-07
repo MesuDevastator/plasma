@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(plugin_loading_unloading)
 {
     plasma::log::initialize_logging_system_test();
     plasma::plugin::plugin_manager pm{};
-    auto test{ new test_plugin{} };
+    const auto test{ new test_plugin{} };
     pm.register_plugin(test);
     pm.register_plugin(new depended_test_plugin{});
     pm.initialize_plugins();
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(plugin_loading_unloading)
     {
         const auto& plugin{ pm.get_plugin(test_plugin_name) };
         BOOST_REQUIRE(plugin != nullptr);
-        auto ptr{ dynamic_cast<test_plugin*>(plugin.get()) };
+        const auto ptr{ dynamic_cast<test_plugin*>(plugin.get()) };
         BOOST_REQUIRE(ptr != nullptr);
         BOOST_REQUIRE(ptr == test);
         BOOST_CHECK(ptr->initialized());

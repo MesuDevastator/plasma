@@ -20,20 +20,20 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <plasma/networking/type/type_exception.hpp>
-#include <string>
+#include <plasma/networking/type/string_exception.hpp>
 
 namespace plasma::networking::type
 {
-    class PLASMA_EXTERN varint_exception : public type_exception
+    string_exception::string_exception(const char* message) noexcept : message_{ message }
     {
-    private:
-        std::string message_;
-    public:
-        explicit varint_exception(const char* message) noexcept;
-        explicit varint_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
+    }
+
+    string_exception::string_exception(const std::string& message) noexcept : message_{ message }
+    {
+    }
+
+    const char* string_exception::what() const noexcept
+    {
+        return message_.c_str();
+    }
 }

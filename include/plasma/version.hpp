@@ -33,4 +33,6 @@ namespace plasma
     PLASMA_EXTERN extern const std::string commit_hash;
     PLASMA_EXTERN extern const semver::version semantic_version;
     PLASMA_EXTERN extern const std::string full_version;
+    PLASMA_EXTERN extern const std::int32_t protocol_version;
+    PLASMA_EXTERN extern const std::string protocol_version_name;
 }

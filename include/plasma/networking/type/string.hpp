@@ -22,18 +22,14 @@
 
 #pragma once
 
-#include <plasma/networking/type/type_exception.hpp>
+#include <plasma/extern.hpp>
+#include <plasma/networking/type/varint.hpp>
 #include <string>
 
 namespace plasma::networking::type
 {
-    class PLASMA_EXTERN varint_exception : public type_exception
-    {
-    private:
-        std::string message_;
-    public:
-        explicit varint_exception(const char* message) noexcept;
-        explicit varint_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
+    constexpr const std::size_t string_max_size{ (32767 * 3) + 3 };
+    PLASMA_EXTERN std::u8string read_string(const std::byte* const data, const std::size_t max_length = string_max_size);
+    PLASMA_EXTERN std::u8string read_string(const std::byte* const data, std::size_t& length, const std::size_t max_length = string_max_size);
+    PLASMA_EXTERN std::size_t write_string(const std::u8string& string, std::byte* const data, const std::size_t max_length = string_max_size);
 }

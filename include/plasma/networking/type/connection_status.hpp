@@ -22,18 +22,14 @@
 
 #pragma once
 
-#include <plasma/networking/type/type_exception.hpp>
-#include <string>
-
 namespace plasma::networking::type
 {
-    class PLASMA_EXTERN varint_exception : public type_exception
+    enum class connection_status
     {
-    private:
-        std::string message_;
-    public:
-        explicit varint_exception(const char* message) noexcept;
-        explicit varint_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
+        handshake,
+        status,
+        login,
+        configuration,
+        play
     };
 }
