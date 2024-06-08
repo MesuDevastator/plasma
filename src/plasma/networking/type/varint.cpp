@@ -20,9 +20,9 @@
  * SOFTWARE.
  */
 
-#include <bit>
 #include <cstdint>
 #include <plasma/networking/type/varint.hpp>
+#include <plasma/util/byteswap.hpp>
 
 namespace plasma::networking::type
 {

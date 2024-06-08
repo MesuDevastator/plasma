@@ -20,7 +20,6 @@
  * SOFTWARE.
  */
 
-#include "boost/system/detail/error_code.hpp"
 #include <cstdint>
 #include <fmt/format.h>
 #include <memory>
