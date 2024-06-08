@@ -35,8 +35,8 @@ namespace plasma::config
     {
     private:
         logger lg_;
-        std::filesystem::path file_path_;
     public:
+        static constexpr auto file_path{ "./configs/plasma.yml" };
         class
         {
         public:

@@ -21,7 +21,7 @@
  */
 
 #include <filesystem>
-
+#include <fmt/format.h>
 #include <boost/property_tree/ptree.hpp>
 #include <yaml_parser.hpp>
 
@@ -30,7 +30,6 @@
 namespace plasma::config
 {
     plasma_config::plasma_config() noexcept :
-        file_path_{ "./configs/plasma.yaml" },
         logging
         {
             .color_logging = true
@@ -55,14 +54,14 @@ namespace plasma::config
     void plasma_config::load()
     {
         INF(lg_) << "Loading plasma configuration";
-        if (!exists(file_path_))
+        if (!std::filesystem::exists(file_path))
         {
-            WRN(lg_) << "Failed to find " << file_path_ << ", initializing a new one";
+            WRN(lg_) << fmt::format("Failed to find {}, initializing a new one", file_path);
             save();
             return;
         }
         boost::property_tree::ptree tree{};
-        yaml_parser::read_yaml(file_path_.string(), tree);
+        yaml_parser::read_yaml(file_path, tree);
 
         logging.color_logging = tree.get<bool>("logging.color_logging", logging.color_logging);
 
@@ -90,7 +89,7 @@ namespace plasma::config
         tree.put("networking.listen_address", networking.listen_address);
         tree.put("networking.listen_port", networking.listen_port);
 
-        create_directories(file_path_.parent_path());
-        yaml_parser::write_yaml(file_path_.string(), tree);
+        create_directories(std::filesystem::path{ file_path }.parent_path());
+        yaml_parser::write_yaml(file_path, tree);
     }
 }
