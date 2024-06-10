@@ -93,16 +93,16 @@ namespace plasma::log
         console_sink->set_formatter(&color_formatter);
         console_sink->locked_backend()->add_stream(plasma::log::clog_stream_ptr);
 
-        std::filesystem::create_directory("./logs");
+        std::filesystem::create_directory("./log");
         auto file_sink{ boost::make_shared<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>(
-            boost::log::keywords::target = "./logs",
-            boost::log::keywords::file_name = "./logs/log_%N.log",
+            boost::log::keywords::target = "./log",
+            boost::log::keywords::file_name = "./log/log_%N.log",
             boost::log::keywords::rotation_size = 10 * 1024 * 1024,
             boost::log::keywords::auto_flush = true,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0)
         ) };
         file_sink->set_formatter(formatter);
-        file_sink->locked_backend()->set_file_collector(boost::log::sinks::file::make_collector(boost::log::keywords::target = "./logs"));
+        file_sink->locked_backend()->set_file_collector(boost::log::sinks::file::make_collector(boost::log::keywords::target = "./log"));
         file_sink->locked_backend()->scan_for_files();
 #if defined(PLASMA_ALWAYS_TRACE) || !defined(NDEBUG) || defined(_DEBUG)
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);

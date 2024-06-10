@@ -40,6 +40,7 @@ namespace plasma
     class PLASMA_EXTERN plasma_server : public plasma::plugin::plugin
     {
     private:
+        friend networking::plasma_connection;
         logger lg_;
         plasma::config::plasma_config config_;
         boost::program_options::variables_map vm_;

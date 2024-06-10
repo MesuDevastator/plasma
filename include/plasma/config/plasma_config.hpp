@@ -36,7 +36,7 @@ namespace plasma::config
     private:
         logger lg_;
     public:
-        static constexpr auto file_path{ "./configs/plasma.yml" };
+        static constexpr auto file_path{ "./config/plasma.yml" };
         class
         {
         public:
@@ -60,6 +60,8 @@ namespace plasma::config
         public:
             std::string listen_address;
             boost::asio::ip::port_type listen_port;
+            std::int64_t max_players;
+            std::int64_t timeout_milliseconds;
         } networking;
 
         plasma_config() noexcept;

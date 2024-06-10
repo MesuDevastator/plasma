@@ -51,11 +51,13 @@ namespace plasma::networking
             class PLASMA_EXTERN handshake_packet
             {
             public:
+                static constexpr const std::int32_t packet_id{ 0 };
                 std::int32_t protocol_version;
                 std::u8string server_address;
                 std::uint16_t server_port;
                 std::int32_t next_state;
                 static handshake_packet parse(const std::byte* const body, const std::size_t max_length);
+                packet create() const;
             };
         };
     }

@@ -48,8 +48,7 @@ namespace plasma::log
     template<typename TValue>
     void set_attr(const char* name, TValue value)
     {
-        auto attr{ boost::log::attribute_cast<boost::log::attributes::mutable_constant<TValue>>(boost::log::core::get()->get_global_attributes()[name]) };
-        attr.set(value);
+        boost::log::attribute_cast<boost::log::attributes::mutable_constant<TValue>>(boost::log::core::get()->get_global_attributes()[name]).set(value);
     }
 
     PLASMA_EXTERN void initialize_logging_system();
@@ -60,6 +59,7 @@ namespace plasma::log
 
 using logger = boost::log::sources::logger_mt;
 
+// NOTE: These logging macros need to be surrounded by braces, since they are composed of multiple statements!
 #if !defined(NDEBUG) || defined(_DEBUG)
 #define TRC(lg) ::plasma::log::set_attr("Line", __LINE__);::plasma::log::set_attr("File", __FILE__);::plasma::log::set_attr("Severity", ::boost::log::trivial::severity_level::trace);BOOST_LOG((lg))
 #define DBG(lg) ::plasma::log::set_attr("Line", __LINE__);::plasma::log::set_attr("File", __FILE__);::plasma::log::set_attr("Severity", ::boost::log::trivial::severity_level::debug);BOOST_LOG((lg))

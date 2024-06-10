@@ -29,6 +29,10 @@ set(MI_SECURE ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    add_compile_definitions(NDEBUG)
+endif()
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -z noexecstack -z now -Wl,-rpath,.:../lib")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z noexecstack -z now -Wl,-rpath,.:../lib")

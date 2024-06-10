@@ -50,6 +50,7 @@ namespace plasma
             bool killed_;
             plasma_server& server_;
             boost::asio::ip::tcp::socket socket_;
+            boost::asio::steady_timer timeout_timer_;
             boost::uuids::uuid uuid_;
             std::queue<type::packet> send_queue_;
             std::mutex send_lock_;
@@ -58,6 +59,7 @@ namespace plasma
             std::size_t packet_seq_;
             type::connection_status status_;
             explicit plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid);
+            void handle_timeout(const boost::system::error_code& error, const pointer self);
             void handle_read_head(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t cursor, const pointer self);
             void handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t length_length, const pointer self);
             void handle_write(const boost::system::error_code& error, const std::size_t bytes_transferred, const pointer self);

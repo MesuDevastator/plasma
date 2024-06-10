@@ -56,21 +56,21 @@ namespace plasma::networking::type
         {
             case connection_status::handshake:
             {
-                if (packet_id == 0)
+                if (packet_id == handshake_packet::packet_id)
                 {
                     const auto handshake_packet{ handshake_packet::parse(data.get() + head_length, body_length) };
-                    DBG(connection.lg_) << fmt::format("Received handshake request, client procotol {}, server address {}, server port {}", handshake_packet.protocol_version, reinterpret_cast<const char*>(handshake_packet.server_address.data()), handshake_packet.server_port);
+                    INF(connection.lg_) << fmt::format("Received handshake request, client protocol {}, server address {}, server port {}", handshake_packet.protocol_version, reinterpret_cast<const char*>(handshake_packet.server_address.data()), handshake_packet.server_port);
                     switch (handshake_packet.next_state)
                     {
                         case 1:
                         {
-                            DBG(connection.lg_) << "Entering status query";
+                            INF(connection.lg_) << "Entering status query";
                             connection.status_ = connection_status::status;
                             break;
                         }
                         case 2:
                         {
-                            DBG(connection.lg_) << "Entering login";
+                            INF(connection.lg_) << "Entering login";
                             connection.status_ = connection_status::login;
                             break;
                         }
@@ -97,8 +97,8 @@ namespace plasma::networking::type
                 else if (packet_id == 0)
                 {
                     TRC(connection.lg_) << "Received status query request";
-                    std::string motd{
-                        R"({
+                    std::u8string motd{
+                        u8R"({
                             "version": {
                                 "name": "1.19.4",
                                 "protocol": 766
@@ -121,9 +121,9 @@ namespace plasma::networking::type
                             "previewsChat": false
                         })"
                     };
-                    const auto length{ motd.length() + get_varint_length(motd.length()) };
-                    auto body{ std::make_unique<std::byte[]>(length) };
-                    write_string(std::u8string{ reinterpret_cast<const char8_t*>(motd.data()), motd.length() }, body.get(), length);
+                    const auto length{ get_string_length(motd) };
+                    const auto body{ std::make_unique<std::byte[]>(length) };
+                    write_string(motd, body.get(), length);
                     connection.send(packet{ length, 0, body.get() });
                 }
                 break;
@@ -147,16 +147,23 @@ namespace plasma::networking::type
     {
         std::size_t protocol_version_length{};
         const auto protocol_version{ read_varint(body, protocol_version_length, max_length) };
-
         std::size_t server_address_length{};
         const auto server_address{ read_string(body + protocol_version_length, server_address_length, max_length - protocol_version_length) };
-
-        constexpr const std::size_t server_port_length{ sizeof(std::uint16_t) };
+        constexpr const std::size_t server_port_length{ sizeof(decltype(server_port)) };
         const auto server_port{ read_ushort(body + protocol_version_length + server_address_length, max_length - protocol_version_length - server_address_length) };
-
         std::size_t next_state_length{};
         const auto next_state{ read_varint(body + protocol_version_length + server_address_length + server_port_length, next_state_length, max_length - protocol_version_length - server_address_length - server_port_length) };
-
         return handshake_packet{ protocol_version, server_address, server_port, next_state };
+    }
+
+    packet packet::handshake_packet::create() const
+    {
+        const auto body_length{ get_varint_length(protocol_version) + get_string_length(server_address) + sizeof(decltype(server_port)) + get_varint_length(next_state) };
+        const auto body{ std::make_unique<std::byte[]>(body_length) };
+        const auto protocol_version_length{ write_varint(protocol_version, body.get()) };
+        const auto server_address_length{ write_string(server_address, body.get() + protocol_version_length) };
+        const auto server_port_length{ write_ushort(server_port, body.get() + protocol_version_length + server_address_length) };
+        write_varint(next_state, body.get() + protocol_version_length + server_address_length + server_port_length);
+        return packet{ body_length, packet_id, body.get() };
     }
 }

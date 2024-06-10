@@ -46,7 +46,9 @@ namespace plasma::config
         networking
         {
             .listen_address = "0.0.0.0",
-            .listen_port = 25565
+            .listen_port = 25565,
+            .max_players = 20,
+            .timeout_milliseconds = 60000
         }
     {
     }
@@ -63,14 +65,16 @@ namespace plasma::config
         boost::property_tree::ptree tree{};
         yaml_parser::read_yaml(file_path, tree);
 
-        logging.color_logging = tree.get<bool>("logging.color_logging", logging.color_logging);
+        logging.color_logging = tree.get("logging.color_logging", logging.color_logging);
 
-        world.storage.base_dir = tree.get<std::string>("world.storage.base_dir", world.storage.base_dir.string());
-        world.storage.backup_dir = tree.get<std::string>("world.storage.backup_dir", world.storage.backup_dir.string());
-        world.name = tree.get<std::string>("world.name", world.name);
+        world.storage.base_dir = tree.get("world.storage.base_dir", world.storage.base_dir.string());
+        world.storage.backup_dir = tree.get("world.storage.backup_dir", world.storage.backup_dir.string());
+        world.name = tree.get("world.name", world.name);
 
-        networking.listen_address = tree.get<std::string>("networking.listen_address", networking.listen_address);
-        networking.listen_port = tree.get<boost::asio::ip::port_type>("networking.listen_port", networking.listen_port);
+        networking.listen_address = tree.get("networking.listen_address", networking.listen_address);
+        networking.listen_port = tree.get("networking.listen_port", networking.listen_port);
+        networking.max_players = tree.get("networking.max_players", networking.max_players);
+        networking.timeout_milliseconds = tree.get("networking.timeout_milliseconds", networking.timeout_milliseconds);
 
         save();
     }
@@ -88,6 +92,8 @@ namespace plasma::config
 
         tree.put("networking.listen_address", networking.listen_address);
         tree.put("networking.listen_port", networking.listen_port);
+        tree.put("networking.max_players", networking.max_players);
+        tree.put("networking.timeout_milliseconds", networking.timeout_milliseconds);
 
         create_directories(std::filesystem::path{ file_path }.parent_path());
         yaml_parser::write_yaml(file_path, tree);

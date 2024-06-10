@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+#include <bit>
 #include <cstdint>
 #include <plasma/networking/type/varint.hpp>
 #include <plasma/util/byteswap.hpp>
@@ -103,7 +104,7 @@ namespace plasma::networking::type
         }
     }
 
-    std::size_t get_varint_length(std::int32_t value)
+    std::size_t get_varint_length(std::int32_t value) noexcept
     {
         std::size_t i{ 1 };
         for (; (value & ~static_cast<std::int32_t>(segment_bits)) != 0; value = static_cast<std::uint32_t>(value) >> 7, i++)
@@ -214,7 +215,7 @@ namespace plasma::networking::type
         }
     }
 
-    std::size_t get_varlong_length(std::int64_t value)
+    std::size_t get_varlong_length(std::int64_t value) noexcept
     {
         std::size_t i{ 1 };
         for (; (value & ~static_cast<std::int64_t>(segment_bits)) != 0; value = static_cast<std::uint64_t>(value) >> 7, i++)
@@ -260,6 +261,20 @@ namespace plasma::networking::type
             return std::byteswap(value);
         }
         return value;
+    }
+
+    std::size_t write_ushort(std::uint16_t value, std::byte* const data, const std::size_t max_length)
+    {
+        if constexpr (std::endian::native == std::endian::little)
+        {
+            value = std::byteswap(value);
+        }
+        if (max_length < sizeof(std::uint16_t))
+        {
+            throw varint_exception{ "Failed to write ushort: unexpected eof" };
+        }
+        *reinterpret_cast<std::uint16_t*>(data) = value;
+        return sizeof(std::uint16_t);
     }
 
     std::int64_t read_long(const std::byte* const data, const std::size_t max_length)

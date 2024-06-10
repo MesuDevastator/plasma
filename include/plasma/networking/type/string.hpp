@@ -32,4 +32,6 @@ namespace plasma::networking::type
     PLASMA_EXTERN std::u8string read_string(const std::byte* const data, const std::size_t max_length = string_max_size);
     PLASMA_EXTERN std::u8string read_string(const std::byte* const data, std::size_t& length, const std::size_t max_length = string_max_size);
     PLASMA_EXTERN std::size_t write_string(const std::u8string& string, std::byte* const data, const std::size_t max_length = string_max_size);
+    PLASMA_EXTERN std::size_t get_string_length(const std::u8string& string);
+    PLASMA_EXTERN std::size_t get_string_length(const std::byte* const data, const std::size_t max_length = string_max_size);
 }

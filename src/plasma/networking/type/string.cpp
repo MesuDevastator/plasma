@@ -57,4 +57,15 @@ namespace plasma::networking::type
         }
         return string.copy(reinterpret_cast<char8_t*>(data + length_length), string.length()) + length_length;
     }
+
+    std::size_t get_string_length(const std::u8string& string)
+    {
+        return get_varint_length(string.length()) + string.length();
+    }
+
+    std::size_t get_string_length(const std::byte* const data, const std::size_t max_length)
+    {
+        std::size_t length_length{};
+        return read_varint(data, length_length, max_length) + length_length;
+    }
 }

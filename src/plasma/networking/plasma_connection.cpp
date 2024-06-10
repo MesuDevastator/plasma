@@ -31,6 +31,15 @@
 
 namespace plasma::networking
 {
+    void plasma_connection::handle_timeout(const boost::system::error_code& error, [[maybe_unused]] pointer self)
+    {
+        if (!error)
+        {
+            ERR(lg_) << fmt::format("Connection {} timed out after {}ms", to_string(uuid_), server_.config_.networking.timeout_milliseconds);
+            kill();
+        }
+    }
+
     void plasma_connection::handle_read(const boost::system::error_code& error, const std::size_t bytes_transferred, const std::size_t length_length, [[maybe_unused]] pointer self)
     {
         if (!error)
@@ -54,7 +63,7 @@ namespace plasma::networking
                 kill();
                 return;
             }
-            start_read();    
+            start_read();
         }
         else
         {
@@ -89,10 +98,12 @@ namespace plasma::networking
                 }
                 DBG(lg_) << fmt::format("Connection {} >> Packet {}: total length {}", to_string(uuid_), packet_seq_, cursor + 1 + length);
                 body_buffer_ = std::make_unique<std::byte[]>(cursor + 1 + length);
+                timeout_timer_.expires_after(std::chrono::milliseconds{ server_.config_.networking.timeout_milliseconds });
                 async_read(socket_, boost::asio::buffer(body_buffer_.get() + cursor + 1, length), [this, cursor, self](const auto& error, const auto bytes_transferred){ handle_read(error, bytes_transferred, cursor + 1, self); });
             }
             else
             {
+                timeout_timer_.expires_after(std::chrono::milliseconds{ server_.config_.networking.timeout_milliseconds });
                 async_read(socket_, boost::asio::buffer(head_buffer_.get() + cursor + 1, 1), [this, cursor, self](const auto& error, const auto bytes_transferred){ handle_read_head(error, bytes_transferred, cursor + 1, self); });
             }
         }
@@ -123,8 +134,9 @@ namespace plasma::networking
     }
 
     plasma_connection::plasma_connection(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid) :
-        killed_{}, server_{ server }, socket_{ io_context }, uuid_{ uuid }, head_buffer_{ std::make_unique<std::byte[]>(type::varint_max_size) }, body_buffer_{}, packet_seq_{ 1 }, status_{ type::connection_status::handshake }
+        killed_{}, server_{ server }, socket_{ io_context }, timeout_timer_{ io_context }, uuid_{ uuid }, head_buffer_{ std::make_unique<std::byte[]>(type::varint_max_size) }, body_buffer_{}, packet_seq_{ 1 }, status_{ type::connection_status::handshake }
     {
+        timeout_timer_.expires_at(boost::asio::steady_timer::time_point::max());
     }
 
     plasma_connection::pointer plasma_connection::create(boost::asio::io_context& io_context, plasma_server& server, const boost::uuids::uuid& uuid) noexcept
@@ -145,6 +157,8 @@ namespace plasma::networking
     void plasma_connection::start_read()
     {
         const auto self{ shared_from_this() };
+        timeout_timer_.expires_after(std::chrono::milliseconds{ server_.config_.networking.timeout_milliseconds });
+        timeout_timer_.async_wait([this, self](const auto& error){ handle_timeout(error, self); });
         async_read(socket_, boost::asio::buffer(head_buffer_.get(), 1), [this, self](const auto& error, const auto bytes_transferred){ handle_read_head(error, bytes_transferred, 0, self); });
     }
 
@@ -161,17 +175,12 @@ namespace plasma::networking
             return;
         }
         killed_ = true;
-        DBG(lg_) << "Killing connection " << to_string(uuid_);
-        try
-        {
-            socket_.cancel();
-            socket_.shutdown(boost::asio::socket_base::shutdown_both);
-            server_.remove_connection(uuid_);
-        }
-        catch (...)
-        {
-            server_.remove_connection(uuid_);
-        }
+        INF(lg_) << "Killing connection " << to_string(uuid_);
+        boost::system::error_code ignored{};
+        timeout_timer_.cancel(ignored);
+        static_cast<void>(socket_.cancel(ignored));
+        static_cast<void>(socket_.close(ignored));
+        server_.remove_connection(uuid_);
     }
 
     void plasma_connection::send(const type::packet& packet)
@@ -189,6 +198,6 @@ namespace plasma::networking
     plasma_connection::~plasma_connection()
     {
         TRC(lg_) << "Destructing connection " << to_string(uuid_);
-        socket_.close();
+        kill();
     }
 }
