@@ -46,7 +46,7 @@ inline std::int32_t read_varint(const std::span<std::byte> data)
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         value |= static_cast<std::int32_t>(current & segment_bits) << position;
         if ((current & continue_bit) == std::byte{})
         {
@@ -70,7 +70,7 @@ inline std::int32_t read_varint(const std::span<std::byte> data, std::size_t &le
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         value |= static_cast<std::int32_t>(current & segment_bits) << position;
         if ((current & continue_bit) == std::byte{})
         {
@@ -94,11 +94,11 @@ inline std::size_t write_varint(std::int32_t value, const std::span<std::byte> d
     {
         if ((value & ~static_cast<std::int32_t>(segment_bits)) == 0)
         {
-            data.at(i) = static_cast<std::byte>(value);
+            util::at(data, i) = static_cast<std::byte>(value);
             return i + 1;
         }
-        data.at(i) = static_cast<std::byte>((value & static_cast<std::int32_t>(segment_bits)) |
-                                            static_cast<std::int32_t>(continue_bit));
+        util::at(data, i) = static_cast<std::byte>((value & static_cast<std::int32_t>(segment_bits)) |
+                                                   static_cast<std::int32_t>(continue_bit));
         value = static_cast<std::uint32_t>(value) >> 7;
         ++i;
     }
@@ -120,7 +120,7 @@ inline std::size_t get_varint_length(const std::span<std::byte> data)
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         if ((current & continue_bit) == std::byte{})
         {
             return i + 1;
@@ -142,7 +142,7 @@ inline std::int64_t read_varlong(const std::span<std::byte> data)
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         value |= static_cast<std::int64_t>(current & segment_bits) << position;
         if ((current & continue_bit) == std::byte{})
         {
@@ -166,7 +166,7 @@ inline std::int64_t read_varlong(const std::span<std::byte> data, std::size_t &l
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         value |= static_cast<std::int64_t>(current & segment_bits) << position;
         if ((current & continue_bit) == std::byte{})
         {
@@ -190,11 +190,11 @@ inline std::size_t write_varlong(std::int64_t value, const std::span<std::byte> 
     {
         if ((value & ~static_cast<std::int64_t>(segment_bits)) == 0)
         {
-            data.at(i) = static_cast<std::byte>(value);
+            util::at(data, i) = static_cast<std::byte>(value);
             return i + 1;
         }
-        data.at(i) = static_cast<std::byte>((value & static_cast<std::int64_t>(segment_bits)) |
-                                            static_cast<std::int64_t>(continue_bit));
+        util::at(data, i) = static_cast<std::byte>((value & static_cast<std::int64_t>(segment_bits)) |
+                                                   static_cast<std::int64_t>(continue_bit));
         value = static_cast<std::uint64_t>(value) >> 7;
         ++i;
     }
@@ -216,7 +216,7 @@ inline std::size_t get_varlong_length(const std::span<std::byte> data)
     std::byte current{};
     while (true)
     {
-        current = data.at(i);
+        current = util::at(data, i);
         if ((current & continue_bit) == std::byte{})
         {
             return i + 1;

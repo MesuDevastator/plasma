@@ -38,6 +38,17 @@ std::span<T, Extent> checked_subspan(const std::span<T, Extent> span, const std:
     return span.subspan(offset, length);
 }
 
+template <typename T, std::size_t Extent = std::dynamic_extent>
+std::span<T, Extent>::reference at(const std::span<T, Extent> span,
+                                   const typename std::span<T, Extent>::size_type index)
+{
+    if (index >= span.size())
+    {
+        throw std::out_of_range{"Failed to access span: out of range"};
+    }
+    return span[index];
+}
+
 // template <typename T, std::size_t Extent = std::dynamic_extent>
 // inline const std::span<typename std::add_const_t<std::remove_const_t<T>>, Extent>* to_const_span(const std::span<T,
 // Extent>* span)
