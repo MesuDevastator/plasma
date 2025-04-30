@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,18 +22,19 @@
 
 #pragma once
 
-#include <plasma/networking/type/type_exception.hpp>
+#include <plasma/extern.hpp>
 #include <string>
 
 namespace plasma::networking::type
 {
-    class PLASMA_EXTERN packet_exception : public type_exception
-    {
-    private:
-        std::string message_;
-    public:
-        explicit packet_exception(const char* message) noexcept;
-        explicit packet_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
-}
+class PLASMA_EXTERN packet_exception : public std::exception
+{
+  private:
+    std::string message_;
+
+  public:
+    explicit packet_exception(const char *message) noexcept;
+    explicit packet_exception(const std::string &message) noexcept;
+    const char *what() const noexcept override;
+};
+} // namespace plasma::networking::type

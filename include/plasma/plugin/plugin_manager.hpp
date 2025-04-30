@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,29 +24,29 @@
 
 #include <map>
 #include <memory>
-#include <string>
 #include <mutex>
+#include <string>
 
-#include <plasma/plugin/plugin.hpp>
 #include <plasma/extern.hpp>
 #include <plasma/log.hpp>
+#include <plasma/plugin/plugin.hpp>
 
 namespace plasma::plugin
 {
-    class plugin;
-    class PLASMA_EXTERN plugin_manager
-    {
-    private:
-        logger lg_;
-        std::map<std::size_t, std::shared_ptr<plugin>> plugins_;
-        std::mutex plugin_mutex_;
-    public:
-        plugin_manager();
-        plugin_manager(const plugin_manager&) = delete;
-        void register_plugin(plugin* plugin);
-        void initialize_plugins();
-        std::size_t unload_plugin(const std::string& name);
-        std::shared_ptr<plugin> get_plugin(const std::string& name) const;
-    };
-}
+class plugin;
+class PLASMA_EXTERN plugin_manager
+{
+  private:
+    logger lg_;
+    std::map<std::size_t, std::shared_ptr<plugin>> plugins_;
+    std::mutex plugin_mutex_;
 
+  public:
+    plugin_manager();
+    plugin_manager(const plugin_manager &) = delete;
+    void register_plugin(plugin *plugin);
+    void initialize_plugins();
+    std::size_t unload_plugin(const std::string &name);
+    std::shared_ptr<plugin> get_plugin(const std::string &name) const;
+};
+} // namespace plasma::plugin

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,46 @@
 
 #pragma once
 
-#include <exception>
+#include <algorithm>
+#include <cstddef>
+#include <string_view>
 
-#include <plasma/extern.hpp>
-
-namespace plasma::networking::type
+namespace plasma::util
 {
-    class PLASMA_EXTERN type_exception : public std::exception
+// https://zhuanlan.zhihu.com/p/32076857269
+template <std::size_t N> struct literal_string final
+{
+  public:
+    static constexpr const std::size_t size{N - 1};
+    char value[N]{};
+
+    constexpr literal_string(const char (&str)[N]) noexcept
     {
-    public:
-        virtual const char* what() const noexcept override = 0;
-    };
+        std::ranges::copy(str, value);
+    }
+
+    constexpr operator std::string_view() const noexcept
+    {
+        return std::string_view{value, N};
+    }
+
+    constexpr bool operator==(std::string_view str) const noexcept
+    {
+        return std::ranges::equal(str, value);
+    }
+};
+
+template <std::size_t N1, std::size_t N2>
+constexpr bool operator==(const literal_string<N1> &str1, const literal_string<N2> &str2) noexcept
+{
+    return std::ranges::equal(str1.value, str2.value);
 }
+
+namespace literals
+{
+template <literal_string String> constexpr auto operator""_ls()
+{
+    return String;
+}
+} // namespace literals
+} // namespace plasma::util

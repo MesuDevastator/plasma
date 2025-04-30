@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,17 +22,17 @@
 
 #pragma once
 
-#include <string>
-#include <semver.hpp>
 #include <plasma/extern.hpp>
+#include <semver.hpp>
+#include <string>
 
 namespace plasma
 {
-    PLASMA_EXTERN extern const std::string release_version;
-    PLASMA_EXTERN extern const std::string branch_name;
-    PLASMA_EXTERN extern const std::string commit_hash;
-    PLASMA_EXTERN extern const semver::version semantic_version;
-    PLASMA_EXTERN extern const std::string full_version;
-    PLASMA_EXTERN extern const std::int32_t protocol_version;
-    PLASMA_EXTERN extern const std::string protocol_version_name;
-}
+PLASMA_EXTERN extern const std::string release_version;
+PLASMA_EXTERN extern const std::string branch_name;
+PLASMA_EXTERN extern const std::string commit_hash;
+PLASMA_EXTERN extern const semver::version semantic_version;
+PLASMA_EXTERN extern const std::string full_version;
+PLASMA_EXTERN extern const std::int32_t protocol_version;
+PLASMA_EXTERN extern const std::string protocol_version_name;
+} // namespace plasma

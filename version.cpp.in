@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,72 +21,47 @@
  */
 
 #include <cxx_detect.h>
-#include <fmt/format.h>
 #include <fmt/compile.h>
+#include <fmt/format.h>
 #include <plasma/version.hpp>
 
 namespace plasma
 {
-    const std::string release_version{ "@RELEASE_VERSION@" };
+const std::string release_version{"@RELEASE_VERSION@"};
 
-    const std::string branch_name{ "@BRANCH_NAME@" };
+const std::string branch_name{"@BRANCH_NAME@"};
 
-    const std::string commit_hash{ "@COMMIT_HASH@" };
+const std::string commit_hash{"@COMMIT_HASH@"};
 
-    const semver::version semantic_version{ release_version };
+const semver::version semantic_version{release_version};
 
-    const std::string full_version{
-    #if !defined(NDEBUG) || defined(_DEBUG)
-        fmt::format(
-            "Plasma {} [git {}:{}] "
+const std::string full_version{fmt::format("Plasma {} [mc {}] [git {}:{}]"
 #if CXX_CLANG
-            "[clang {}.{}.{}]"
+                                           " [clang {}.{}.{}]"
 #elif CXX_GNU
-            "[gcc {}.{}.{}]"
+                                           " [gcc {}.{}.{}]"
 #elif CXX_MSC
-            "[msvc {}.{}.{}]"
+                                           " [msvc {}.{}.{}]"
 #elif CXX_INTEL
-            "[icc {}.{}.{}]"
+                                           " [icc {}.{}.{}]"
 #endif
-            " [debug]"
-            , release_version, branch_name, commit_hash,
+#if !defined(NDEBUG) || defined(_DEBUG)
+                                           " [debug]"
+#endif
+                                           ,
+                                           release_version, protocol_version_name, branch_name, commit_hash,
 #if CXX_CLANG
-            CXX_CLANG / 10000000, (CXX_CLANG % 10000000) / 100000, CXX_CLANG % 100000
+                                           CXX_CLANG / 10000000, (CXX_CLANG % 10000000) / 100000, CXX_CLANG % 100000
 #elif CXX_GNU
-            CXX_GNU / 10000000, (CXX_GNU % 10000000) / 100000, CXX_GNU % 100000
+                                           CXX_GNU / 10000000, (CXX_GNU % 10000000) / 100000, CXX_GNU % 100000
 #elif CXX_MSC
-            CXX_MSC / 10000000, (CXX_MSC % 10000000) / 100000, CXX_MSC % 100000
+                                           CXX_MSC / 10000000, (CXX_MSC % 10000000) / 100000, CXX_MSC % 100000
 #elif CXX_INTEL
-            CXX_INTEL / 10000000, (CXX_INTEL % 10000000) / 100000, CXX_INTEL % 100000
+                                           CXX_INTEL / 10000000, (CXX_INTEL % 10000000) / 100000, CXX_INTEL % 100000
 #endif
-            )
-    #else
-        fmt::format(
-            "Plasma {} [git {}:{}] "
-#if CXX_CLANG
-            "[clang {}.{}.{}]"
-#elif CXX_GNU
-            "[gcc {}.{}.{}]"
-#elif CXX_MSC
-            "[msvc {}.{}.{}]"
-#elif CXX_INTEL
-            "[icc {}.{}.{}]"
-#endif
-            , release_version, branch_name, commit_hash,
-#if CXX_CLANG
-            CXX_CLANG / 10000000, (CXX_CLANG % 10000000) / 100000, CXX_CLANG % 100000
-#elif CXX_GNU
-            CXX_GNU / 10000000, (CXX_GNU % 10000000) / 100000, CXX_GNU % 100000
-#elif CXX_MSC
-            CXX_MSC / 10000000, (CXX_MSC % 10000000) / 100000, CXX_MSC % 100000
-#elif CXX_INTEL
-            CXX_INTEL / 10000000, (CXX_INTEL % 10000000) / 100000, CXX_INTEL % 100000
-#endif
-            )
-    #endif
-    };
+                                           )};
 
-    const std::int32_t protocol_version{ 766 };
+const std::int32_t protocol_version{770};
 
-    const std::string protocol_version_name{ "1.20.6" };
-}
+const std::string protocol_version_name{"1.21.5"};
+} // namespace plasma

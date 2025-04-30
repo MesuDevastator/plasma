@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,24 +22,24 @@
 
 #pragma once
 
-#include <plasma/plugin/plugin_manager.hpp>
-#include <plasma/plugin/plugin_descriptor.hpp>
 #include <plasma/extern.hpp>
+#include <plasma/plugin/plugin_descriptor.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
 #include <semver.hpp>
 
 namespace plasma::plugin
 {
-    class plugin_manager;
-    class PLASMA_EXTERN plugin
-    {
-    private:
-        friend class plugin_manager;
-        bool initialized_;
-    public:
-        plugin() noexcept;
-        virtual const plugin_descriptor& get_descriptor() noexcept = 0;
-        virtual void initialize(plugin_manager&) = 0;
-        virtual ~plugin();
-    };
-}
+class plugin_manager;
+class PLASMA_EXTERN plugin
+{
+  private:
+    friend class plugin_manager;
+    bool initialized_;
 
+  public:
+    plugin() noexcept;
+    virtual const plugin_descriptor &get_descriptor() noexcept = 0;
+    virtual void initialize(plugin_manager &) = 0;
+    virtual ~plugin();
+};
+} // namespace plasma::plugin

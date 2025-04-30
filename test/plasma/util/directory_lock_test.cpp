@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,19 +23,19 @@
 #define BOOST_TEST_MODULE directory_lock_test
 #include <boost/test/unit_test.hpp>
 #include <filesystem>
-#include <plasma/util/directory_lock.hpp>
 #include <plasma/log.hpp>
+#include <plasma/util/directory_lock.hpp>
 
 BOOST_AUTO_TEST_SUITE(directory_lock_test)
 
 BOOST_AUTO_TEST_CASE(directory_locking)
 {
     plasma::log::initialize_logging_system_test();
-    std::filesystem::path test_dir{ std::filesystem::temp_directory_path() / "plasma_test_dir" };
+    std::filesystem::path test_dir{std::filesystem::temp_directory_path() / "plasma_test_dir"};
     create_directories(test_dir);
     BOOST_TEST(!plasma::util::directory_lock::is_locked(test_dir));
     {
-        plasma::util::directory_lock lock{ test_dir };
+        plasma::util::directory_lock lock{test_dir};
         BOOST_TEST(plasma::util::directory_lock::is_locked(test_dir));
     }
     BOOST_TEST(!plasma::util::directory_lock::is_locked(test_dir));

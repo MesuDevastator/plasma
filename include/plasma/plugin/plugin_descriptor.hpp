@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,23 @@
 
 #pragma once
 
+#include <semver.hpp>
 #include <string>
 #include <vector>
-#include <semver.hpp>
 
 namespace plasma::plugin
 {
-    class plugin_descriptor
-    {
-    public:
-        std::string name{};
-        semver::version version{};
-        std::string description{};
-        std::vector<std::string> authors{};
-        std::string website{};
-        std::string license{};
-        std::vector<plugin_descriptor> dependencies{};
-        std::vector<plugin_descriptor> optional_dependencies{};
-        std::vector<plugin_descriptor> conflicts{};
-    };
-}
+class plugin_descriptor
+{
+  public:
+    std::string name{};
+    semver::version version{};
+    std::string description{};
+    std::vector<std::string> authors{};
+    std::string website{};
+    std::string license{};
+    std::vector<plugin_descriptor> dependencies{};
+    std::vector<plugin_descriptor> optional_dependencies{};
+    std::vector<plugin_descriptor> conflicts{};
+};
+} // namespace plasma::plugin

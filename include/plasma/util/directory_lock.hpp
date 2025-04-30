@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,18 +29,19 @@
 
 namespace plasma::util
 {
-    class PLASMA_EXTERN directory_lock
-    {
-    private:
-        std::ofstream lock_file_;
-        std::filesystem::path lock_file_path_;
-    public:
-        static constexpr auto directory_lock_name{ "session.lock" };
+class PLASMA_EXTERN directory_lock
+{
+  private:
+    std::ofstream lock_file_;
+    std::filesystem::path lock_file_path_;
 
-        explicit directory_lock(std::filesystem::path directory);
+  public:
+    static constexpr auto directory_lock_name{"session.lock"};
 
-        static bool is_locked(std::filesystem::path directory);
+    explicit directory_lock(std::filesystem::path directory);
 
-        ~directory_lock();
-    };
-}
+    static bool is_locked(std::filesystem::path directory);
+
+    ~directory_lock();
+};
+} // namespace plasma::util

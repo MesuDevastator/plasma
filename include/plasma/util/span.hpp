@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,29 @@
  * SOFTWARE.
  */
 
-#include <plasma/networking/type/varint_exception.hpp>
+#pragma once
 
-namespace plasma::networking::type
+#include <span>
+#include <stdexcept>
+
+namespace plasma::util
 {
-    varint_exception::varint_exception(const char* message) noexcept : message_{ message }
+template <typename T, std::size_t Extent = std::dynamic_extent>
+std::span<T, Extent> checked_subspan(const std::span<T, Extent> span, const std::size_t offset,
+                                     const std::size_t length = std::dynamic_extent)
+{
+    if (offset + length > span.size())
     {
+        throw std::out_of_range{"Failed to create subspan: out of range"};
     }
-
-    varint_exception::varint_exception(const std::string& message) noexcept : message_{ message }
-    {
-    }
-
-    const char* varint_exception::what() const noexcept
-    {
-        return message_.c_str();
-    }
+    return span.subspan(offset, length);
 }
+
+// template <typename T, std::size_t Extent = std::dynamic_extent>
+// inline const std::span<typename std::add_const_t<std::remove_const_t<T>>, Extent>* to_const_span(const std::span<T,
+// Extent>* span)
+// {
+//     // its technically an UB
+//     return reinterpret_cast<decltype(to_const_span(span))>(span);
+// }
+} // namespace plasma::util

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,150 +20,74 @@
  * SOFTWARE.
  */
 
-#include <cstdint>
 #include <fmt/format.h>
 #include <memory>
-#include <plasma/networking/type/packet.hpp>
-#include <plasma/networking/type/string.hpp>
+
 #include <plasma/networking/plasma_connection.hpp>
+#include <plasma/networking/type/connection_status.hpp>
+#include <plasma/networking/type/handshake_packet.hpp>
+#include <plasma/networking/type/packet.hpp>
 #include <plasma/networking/type/packet_exception.hpp>
+#include <plasma/networking/type/string.hpp>
+#include <plasma/util/span.hpp>
 
 namespace plasma::networking::type
 {
-    packet::packet(const std::size_t body_length, const std::int32_t packet_id, const std::byte* const body) :
-        head_length{ get_varint_length(static_cast<std::int32_t>(body_length)) + get_varint_length(packet_id) }, body_length{ body_length }, total_length{ head_length + body_length }, packet_id{ packet_id }, data{ std::make_unique<std::byte[]>(total_length) }
-    {
-        const auto body_length_length{ write_varint(static_cast<std::int32_t>(body_length + get_varint_length(packet_id)), data.get(), total_length) };
-        write_varint(packet_id, data.get() + body_length_length, total_length - body_length_length);
-        std::copy(body, body + body_length, data.get() + head_length);
-    }
-
-    packet::packet(const std::size_t head_length, const std::size_t body_length, const std::int32_t packet_id, const std::byte* const data) :
-        head_length{ head_length }, body_length{ body_length }, total_length{ head_length + body_length }, packet_id{ packet_id }, data{ std::make_unique<std::byte[]>(total_length) }
-    {
-        std::copy(data, data + total_length, this->data.get());
-    }
-
-    packet::packet(const packet& other) :
-        head_length{ other.head_length }, body_length{ other.body_length }, total_length{ other.total_length }, packet_id{ other.packet_id }, data{ std::make_unique<std::byte[]>(other.total_length) }
-    {
-        std::copy(other.data.get(), other.data.get() + other.total_length, data.get());
-    }
-
-    void packet::process(plasma::networking::plasma_connection& connection)
-    {
-        switch (connection.status_)
-        {
-            case connection_status::handshake:
-            {
-                if (packet_id == handshake_packet::packet_id)
-                {
-                    const auto handshake_packet{ handshake_packet::parse(data.get() + head_length, body_length) };
-                    INF(connection.lg_) << fmt::format("Received handshake request, client protocol {}, server address {}, server port {}", handshake_packet.protocol_version, reinterpret_cast<const char*>(handshake_packet.server_address.data()), handshake_packet.server_port);
-                    switch (handshake_packet.next_state)
-                    {
-                        case 1:
-                        {
-                            INF(connection.lg_) << "Entering status query";
-                            connection.status_ = connection_status::status;
-                            break;
-                        }
-                        case 2:
-                        {
-                            INF(connection.lg_) << "Entering login";
-                            connection.status_ = connection_status::login;
-                            break;
-                        }
-                        default:
-                        {
-                            throw packet_exception{ "Failed to process packet: unknown next state in handshake" };
-                        }
-                    }
-                }
-                else
-                {
-                    WRN(connection.lg_) << "Ignoring non-standard handshake packet";
-                }
-                break;
-            }
-            case connection_status::status:
-            {
-                if (packet_id == 1)
-                {
-                    TRC(connection.lg_) << "Received ping request: " << read_long(data.get() + head_length, body_length);
-                    const packet pong{ sizeof(std::int64_t), 1, data.get() + head_length };
-                    async_write(connection.socket_, boost::asio::buffer(pong.data.get(), pong.total_length), [&connection](const boost::system::error_code&, const std::size_t){ connection.kill(); });
-                }
-                else if (packet_id == 0)
-                {
-                    TRC(connection.lg_) << "Received status query request";
-                    std::u8string motd{
-                        u8R"({
-                            "version": {
-                                "name": "1.19.4",
-                                "protocol": 766
-                            },
-                            "players": {
-                                "max": 100,
-                                "online": 5,
-                                "sample": [
-                                    {
-                                        "name": "thinkofdeath",
-                                        "id": "4566e69f-c907-48ee-8d71-d7ba5aa00d20"
-                                    }
-                                ]
-                            },
-                            "description": {
-                                "text": "Hello, world!"
-                            },
-                            "favicon": "data:image/png;base64",
-                            "enforcesSecureChat": false,
-                            "previewsChat": false
-                        })"
-                    };
-                    const auto length{ get_string_length(motd) };
-                    const auto body{ std::make_unique<std::byte[]>(length) };
-                    write_string(motd, body.get(), length);
-                    connection.send(packet{ length, 0, body.get() });
-                }
-                break;
-            }
-            case connection_status::login:
-            {
-                break;
-            }
-            case connection_status::configuration:
-            {
-                break;
-            }
-            case connection_status::play:
-            {
-                break;
-            }
-        }
-    }
-
-    packet::handshake_packet packet::handshake_packet::parse(const std::byte* const body, const std::size_t max_length)
-    {
-        std::size_t protocol_version_length{};
-        const auto protocol_version{ read_varint(body, protocol_version_length, max_length) };
-        std::size_t server_address_length{};
-        const auto server_address{ read_string(body + protocol_version_length, server_address_length, max_length - protocol_version_length) };
-        constexpr const std::size_t server_port_length{ sizeof(decltype(server_port)) };
-        const auto server_port{ read_ushort(body + protocol_version_length + server_address_length, max_length - protocol_version_length - server_address_length) };
-        std::size_t next_state_length{};
-        const auto next_state{ read_varint(body + protocol_version_length + server_address_length + server_port_length, next_state_length, max_length - protocol_version_length - server_address_length - server_port_length) };
-        return handshake_packet{ protocol_version, server_address, server_port, next_state };
-    }
-
-    packet packet::handshake_packet::create() const
-    {
-        const auto body_length{ get_varint_length(protocol_version) + get_string_length(server_address) + sizeof(decltype(server_port)) + get_varint_length(next_state) };
-        const auto body{ std::make_unique<std::byte[]>(body_length) };
-        const auto protocol_version_length{ write_varint(protocol_version, body.get()) };
-        const auto server_address_length{ write_string(server_address, body.get() + protocol_version_length) };
-        const auto server_port_length{ write_ushort(server_port, body.get() + protocol_version_length + server_address_length) };
-        write_varint(next_state, body.get() + protocol_version_length + server_address_length + server_port_length);
-        return packet{ body_length, packet_id, body.get() };
-    }
+packet::packet(std::unique_ptr<std::byte[]> data, std::span<std::byte> data_span, varint_ref length,
+               varint_ref packet_id, std::span<std::byte> body_span) noexcept
+    : data_{std::move(data)}, data_span_{std::move(data_span)}, length_{std::move(length)},
+      packet_id_{std::move(packet_id)}, body_span_{std::move(body_span)}
+{
 }
+
+packet::packet(const packet &other)
+    : data_{std::make_unique<std::byte[]>(other.data_span_.size())}, data_span_{data_.get(), other.data_span_.size()},
+      // Assuming spans are checked
+      length_{std::span{data_span_.begin(), other.length_.max_size()}},
+      packet_id_{std::span{length_.max_data().end(), other.packet_id_.max_size()}},
+      body_span_{packet_id_.max_data().end(), other.body_span_.size()}
+{
+    std::ranges::copy(other.data_span_, data_.get());
+}
+
+std::unique_ptr<packet> packet::parse(const std::span<std::byte> body, const std::int32_t packet_id,
+                                      const connection_status status)
+{
+    logger lg{};
+    switch (status)
+    {
+    case connection_status::handshake: {
+        if (packet_id == handshake_packet::packet_id)
+        {
+            return handshake_packet::parse(body);
+        }
+        else
+        {
+            PLASMA_LOG(lg, warning) << "Ignoring non-standard handshake packet";
+        }
+        break;
+    }
+    case type::connection_status::status: {
+        if (packet_id == 1)
+        {
+            // TODO: Ping packet
+        }
+        else if (packet_id == 0)
+        {
+            // TODO: Status query packet
+        }
+        break;
+    }
+    case connection_status::login: {
+        break;
+    }
+    case connection_status::configuration: {
+        break;
+    }
+    case connection_status::play: {
+        break;
+    }
+    }
+    throw packet_exception{"Unknown packet"};
+}
+} // namespace plasma::networking::type

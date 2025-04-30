@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,43 +31,38 @@
 
 namespace plasma::config
 {
-    class plasma_config : public config
+class plasma_config : public config
+{
+  private:
+    logger lg_;
+
+  public:
+    static constexpr auto file_path{"./config/plasma.yml"};
+
+    class
     {
-    private:
-        logger lg_;
-    public:
-        static constexpr auto file_path{ "./config/plasma.yml" };
-        class
-        {
-        public:
-            bool color_logging;
-        } logging;
+      public:
+        bool color_logging;
+    } logging;
 
-        class
-        {
-        public:
-            class
-            {
-            public:
-                std::filesystem::path base_dir;
-                std::filesystem::path backup_dir;
-            } storage;
-            std::string name;
-        } world;
+    class
+    {
+      public:
+        std::int64_t max_players;
+    } game;
 
-        class
-        {
-        public:
-            std::string listen_address;
-            boost::asio::ip::port_type listen_port;
-            std::int64_t max_players;
-            std::int64_t timeout_milliseconds;
-        } networking;
+    class
+    {
+      public:
+        std::string listen_address;
+        boost::asio::ip::port_type listen_port;
+        std::int32_t timeout_milliseconds;
+    } networking;
 
-        plasma_config() noexcept;
+    plasma_config() noexcept;
 
-        void load() override;
+    void load() override;
 
-        void save() override;
-    };
-}
+    void save() override;
+};
+} // namespace plasma::config

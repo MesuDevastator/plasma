@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,13 +29,14 @@
 
 namespace plasma::util
 {
-    class PLASMA_EXTERN invalid_identifier_exception : public std::exception
-    {
-    private:
-        std::string message_;
-    public:
-        explicit invalid_identifier_exception(const char* message) noexcept;
-        explicit invalid_identifier_exception(const std::string& message) noexcept;
-        const char* what() const noexcept override;
-    };
-}
+class PLASMA_EXTERN invalid_identifier_exception : public std::exception
+{
+  private:
+    std::string message_;
+
+  public:
+    explicit invalid_identifier_exception(const char *message) noexcept;
+    explicit invalid_identifier_exception(const std::string &message) noexcept;
+    const char *what() const noexcept override;
+};
+} // namespace plasma::util

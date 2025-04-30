@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,16 +24,16 @@
 
 namespace plasma::plugin
 {
-    plugin_loading_exception::plugin_loading_exception(const char* message) noexcept : message_{ message }
-    {
-    }
-
-    plugin_loading_exception::plugin_loading_exception(const std::string& message) noexcept : message_{ message }
-    {
-    }
-
-    const char* plugin_loading_exception::what() const noexcept
-    {
-        return message_.c_str();
-    }
+plugin_loading_exception::plugin_loading_exception(const char *message) noexcept : message_{message}
+{
 }
+
+plugin_loading_exception::plugin_loading_exception(const std::string &message) noexcept : message_{message}
+{
+}
+
+const char *plugin_loading_exception::what() const noexcept
+{
+    return message_.c_str();
+}
+} // namespace plasma::plugin

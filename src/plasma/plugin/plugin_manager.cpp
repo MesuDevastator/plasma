@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,115 +26,116 @@
 #include <fmt/format.h>
 
 #include <plasma/plugin/plugin.hpp>
-#include <plasma/plugin/plugin_manager.hpp>
 #include <plasma/plugin/plugin_loading_exception.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
 
 namespace plasma::plugin
 {
-    plugin_manager::plugin_manager() = default;
+plugin_manager::plugin_manager() = default;
 
-    void plugin_manager::register_plugin(plugin* plugin)
+void plugin_manager::register_plugin(plugin *plugin)
+{
+    std::lock_guard<std::mutex> lock{plugin_mutex_};
+    if (plugin == nullptr)
     {
-        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
-        if (plugin == nullptr)
-        {
-            throw plugin_loading_exception{ "Trying to register a null plugin" };
-        }
-        INF(lg_) << "Registering plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
-        const auto hash{ std::hash<std::string>{}(plugin->get_descriptor().name) };
-        TRC(lg_) << "Plugin " << plugin->get_descriptor().name << " name hash \"" << std::hex << hash << std::dec << "\"";
-        if (plugins_.contains(hash))
-        {
-            throw plugin_loading_exception{ "Trying to register a duplicated plugin" };
-        }
-        plugins_.insert(std::pair{ hash, std::shared_ptr<class plugin>{ plugin } });
+        throw plugin_loading_exception{"Trying to register a null plugin"};
     }
-
-    void plugin_manager::initialize_plugins()
+    PLASMA_LOG(lg_, info) << "Registering plugin " << plugin->get_descriptor().name << " "
+                          << plugin->get_descriptor().version.to_string();
+    const auto hash{std::hash<std::string>{}(plugin->get_descriptor().name)};
+    PLASMA_LOG(lg_, trace) << "Plugin " << plugin->get_descriptor().name << " name hash \"" << std::hex << hash
+                           << std::dec << "\"";
+    if (plugins_.contains(hash))
     {
-        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
-        for (auto& [_, plugin] : plugins_)
+        throw plugin_loading_exception{"Trying to register a duplicated plugin"};
+    }
+    plugins_.insert(std::pair{hash, std::shared_ptr<class plugin>{plugin}});
+}
+
+void plugin_manager::initialize_plugins()
+{
+    std::lock_guard<std::mutex> lock{plugin_mutex_};
+    for (auto &[_, plugin] : plugins_)
+    {
+        if (plugin->initialized_)
         {
+            continue;
+        }
+        for (const auto &conflict : plugin->get_descriptor().conflicts)
+        {
+            if (plugins_.contains(std::hash<std::string>{}(conflict.name)))
+            {
+                PLASMA_LOG(lg_, error) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name,
+                                                      plugin->get_descriptor().name);
+                throw plugin_loading_exception{"Plugin conflict detected"};
+            }
+        }
+        auto initialize{[this](auto &&self, auto plugin) -> void {
             if (plugin->initialized_)
             {
-                continue;
+                return;
             }
-            for (const auto& conflict : plugin->get_descriptor().conflicts)
+            plugin->initialized_ = true; // To prevent infinite recursion
+            PLASMA_LOG(lg_, info) << "Initializing plugin " << plugin->get_descriptor().name << " "
+                                  << plugin->get_descriptor().version.to_string();
+            try
             {
-                if (plugins_.contains(std::hash<std::string>{}(conflict.name)))
+                for (const auto &dependency : plugin->get_descriptor().dependencies)
                 {
-                    ERR(lg_) << fmt::format("Detected conflict plugin {} while loading {}", conflict.name, plugin->get_descriptor().name);
-                    throw plugin_loading_exception{ "Plugin conflict detected" };
+                    const auto hash{std::hash<std::string>{}(dependency.name)};
+                    if (!plugins_.contains(hash))
+                    {
+                        PLASMA_LOG(lg_, error) << fmt::format("Dependency plugin {} not found while loading {}",
+                                                              dependency.name, plugin->get_descriptor().name);
+                        throw plugin_loading_exception{"Plugin dependency not found"};
+                    }
+                    self(self, plugins_[hash]); // Throws std::out_of_range if dependency not found
                 }
+                for (const auto &optional_dependency : plugin->get_descriptor().optional_dependencies)
+                {
+                    if (const auto hash{std::hash<std::string>{}(optional_dependency.name)}; plugins_.contains(hash))
+                    {
+                        self(self, plugins_[hash]);
+                    }
+                    else
+                    {
+                        PLASMA_LOG(lg_, warning) << "Optional dependency " << optional_dependency.name << " not found";
+                    }
+                }
+                plugin->initialize(*this);
             }
-            auto initialize{
-                [this](auto&& self, auto plugin) -> void
-                {
-                    if (plugin->initialized_)
-                    {
-                        return;
-                    }
-                    plugin->initialized_ = true;   // To prevent infinite recursion
-                    INF(lg_) << "Initializing plugin " << plugin->get_descriptor().name << " " << plugin->get_descriptor().version;
-                    try
-                    {
-                        for (const auto& dependency : plugin->get_descriptor().dependencies)
-                        {
-                            const auto hash{ std::hash<std::string>{}(dependency.name) };
-                            if (!plugins_.contains(hash))
-                            {
-                                ERR(lg_) << fmt::format("Dependency plugin {} not found while loading {}", dependency.name, plugin->get_descriptor().name);
-                                throw plugin_loading_exception{ "Plugin dependency not found" };
-                            }
-                            self(self, plugins_[hash]);   // Throws std::out_of_range if dependency not found
-                        }
-                        for (const auto& optional_dependency : plugin->get_descriptor().optional_dependencies)
-                        {
-                            if (const auto hash{ std::hash<std::string>{}(optional_dependency.name) }; plugins_.contains(hash))
-                            {
-                                self(self, plugins_[hash]);
-                            }
-                            else
-                            {
-                                WRN(lg_) << "Optional dependency " << optional_dependency.name << " not found";
-                            }
-                        }
-                        plugin->initialize(*this);
-                    }
-                    catch (...)
-                    {
-                        plugin->initialized_= false;
-                        throw;
-                    }
-                }
-            };
-            initialize(initialize, plugin);
-        }
-    }
-
-    std::size_t plugin_manager::unload_plugin(const std::string& name)
-    {
-        std::lock_guard<std::mutex> lock{ plugin_mutex_ };
-        const auto hash{ std::hash<std::string>{}(name) };
-        if (plugins_.at(hash))  // throws std::out_of_range if not found
-        {
-            for (const auto& [_, plugin] : plugins_)
+            catch (...)
             {
-                for (const auto& dependency : plugin->get_descriptor().dependencies)
-                {
-                    if (dependency.name == name)
-                    {
-                        throw plugin_loading_exception{ "Failed to unload a depended plugin" };
-                    }
-                }
+                plugin->initialized_ = false;
+                throw;
             }
-        }
-        return plugins_.erase(hash);
-    }
-
-    std::shared_ptr<plugin> plugin_manager::get_plugin(const std::string& name) const
-    {
-        return plugins_.at(std::hash<std::string>{}(name));     // Copies the shared_ptr
+        }};
+        initialize(initialize, plugin);
     }
 }
 
+std::size_t plugin_manager::unload_plugin(const std::string &name)
+{
+    std::lock_guard<std::mutex> lock{plugin_mutex_};
+    const auto hash{std::hash<std::string>{}(name)};
+    if (plugins_.at(hash)) // throws std::out_of_range if not found
+    {
+        for (const auto &[_, plugin] : plugins_)
+        {
+            for (const auto &dependency : plugin->get_descriptor().dependencies)
+            {
+                if (dependency.name == name)
+                {
+                    throw plugin_loading_exception{"Failed to unload a depended plugin"};
+                }
+            }
+        }
+    }
+    return plugins_.erase(hash);
+}
+
+std::shared_ptr<plugin> plugin_manager::get_plugin(const std::string &name) const
+{
+    return plugins_.at(std::hash<std::string>{}(name)); // Copies the shared_ptr
+}
+} // namespace plasma::plugin

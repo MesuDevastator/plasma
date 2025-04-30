@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,116 +22,101 @@
 
 #define BOOST_TEST_MODULE plugin_manager_test
 #include <boost/test/unit_test.hpp>
-#include <plasma/plugin/plugin_manager.hpp>
-#include <plasma/plugin/plugin_loading_exception.hpp>
 #include <plasma/log.hpp>
+#include <plasma/plugin/plugin_loading_exception.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
 #include <semver.hpp>
 
-constexpr auto depended_test_plugin_name{ "depended_test_plugin" };
-constexpr auto test_plugin_name{ "test_plugin" };
-constexpr auto conflicted_test_plugin_name{ "conflicted_test_plugin" };
+constexpr auto depended_test_plugin_name{"depended_test_plugin"};
+constexpr auto test_plugin_name{"test_plugin"};
+constexpr auto conflicted_test_plugin_name{"conflicted_test_plugin"};
 
 namespace
 {
-    class depended_test_plugin : public plasma::plugin::plugin
+class depended_test_plugin : public plasma::plugin::plugin
+{
+  private:
+    bool initialized_{false};
+    plasma::plugin::plugin_descriptor descriptor_{.name = depended_test_plugin_name};
+
+  public:
+    const plasma::plugin::plugin_descriptor &get_descriptor() noexcept override
     {
-    private:
-        bool initialized_{ false };
-        plasma::plugin::plugin_descriptor descriptor_{
-            .name = depended_test_plugin_name
-        };
-    public:
-        const plasma::plugin::plugin_descriptor& get_descriptor() noexcept override
-        {
-            return descriptor_;
-        }
+        return descriptor_;
+    }
 
-        void initialize(plasma::plugin::plugin_manager&) override
-        {
-            if (initialized_)
-            {
-                throw std::runtime_error{ "Plugin is already initialized" };
-            }
-            initialized_ = true;
-        }
-
-        bool initialized() const noexcept
-        {
-            return initialized_;
-        }
-    };
-
-    class conflicted_test_plugin : public plasma::plugin::plugin
+    void initialize(plasma::plugin::plugin_manager &) override
     {
-    private:
-        bool initialized_{ false };
-        plasma::plugin::plugin_descriptor descriptor_{
-            .name = conflicted_test_plugin_name
-        };
-    public:
-        const plasma::plugin::plugin_descriptor& get_descriptor() noexcept override
+        if (initialized_)
         {
-            return descriptor_;
+            throw std::runtime_error{"Plugin is already initialized"};
         }
+        initialized_ = true;
+    }
 
-        void initialize(plasma::plugin::plugin_manager&) override
-        {
-            if (initialized_)
-            {
-                throw std::runtime_error{ "Plugin is already initialized" };
-            }
-            initialized_ = true;
-        }
-
-        bool initialized() const noexcept
-        {
-            return initialized_;
-        }
-    };
-
-    class test_plugin : public plasma::plugin::plugin
+    bool initialized() const noexcept
     {
-    private:
-        bool initialized_{ false };
-        plasma::plugin::plugin_descriptor descriptor_{
-            .name = test_plugin_name,
-            .dependencies = {
-                {
-                    .name = depended_test_plugin_name
-                }
-            },
-            .optional_dependencies = {
-                {
-                    .name = "random_dependency"
-                }
-            },
-            .conflicts = {
-                {
-                    .name = conflicted_test_plugin_name
-                }
-            }
-        };
-    public:
-        const plasma::plugin::plugin_descriptor& get_descriptor() noexcept override
-        {
-            return descriptor_;
-        }
+        return initialized_;
+    }
+};
 
-        void initialize(plasma::plugin::plugin_manager&) override
-        {
-            if (initialized_)
-            {
-                throw std::runtime_error{ "Plugin is already initialized" };
-            }
-            initialized_ = true;
-        }
+class conflicted_test_plugin : public plasma::plugin::plugin
+{
+  private:
+    bool initialized_{false};
+    plasma::plugin::plugin_descriptor descriptor_{.name = conflicted_test_plugin_name};
 
-        bool initialized() const noexcept
+  public:
+    const plasma::plugin::plugin_descriptor &get_descriptor() noexcept override
+    {
+        return descriptor_;
+    }
+
+    void initialize(plasma::plugin::plugin_manager &) override
+    {
+        if (initialized_)
         {
-            return initialized_;
+            throw std::runtime_error{"Plugin is already initialized"};
         }
-    };
-}
+        initialized_ = true;
+    }
+
+    bool initialized() const noexcept
+    {
+        return initialized_;
+    }
+};
+
+class test_plugin : public plasma::plugin::plugin
+{
+  private:
+    bool initialized_{false};
+    plasma::plugin::plugin_descriptor descriptor_{.name = test_plugin_name,
+                                                  .dependencies = {{.name = depended_test_plugin_name}},
+                                                  .optional_dependencies = {{.name = "random_dependency"}},
+                                                  .conflicts = {{.name = conflicted_test_plugin_name}}};
+
+  public:
+    const plasma::plugin::plugin_descriptor &get_descriptor() noexcept override
+    {
+        return descriptor_;
+    }
+
+    void initialize(plasma::plugin::plugin_manager &) override
+    {
+        if (initialized_)
+        {
+            throw std::runtime_error{"Plugin is already initialized"};
+        }
+        initialized_ = true;
+    }
+
+    bool initialized() const noexcept
+    {
+        return initialized_;
+    }
+};
+} // namespace
 
 BOOST_AUTO_TEST_SUITE(plugin_manager_test)
 
@@ -139,20 +124,20 @@ BOOST_AUTO_TEST_CASE(plugin_loading_unloading)
 {
     plasma::log::initialize_logging_system_test();
     plasma::plugin::plugin_manager pm{};
-    const auto test{ new test_plugin{} };
+    const auto test{new test_plugin{}};
     pm.register_plugin(test);
     pm.register_plugin(new depended_test_plugin{});
     pm.initialize_plugins();
     try
     {
-        const auto& plugin{ pm.get_plugin(test_plugin_name) };
+        const auto &plugin{pm.get_plugin(test_plugin_name)};
         BOOST_REQUIRE(plugin != nullptr);
-        const auto ptr{ dynamic_cast<test_plugin*>(plugin.get()) };
+        const auto ptr{dynamic_cast<test_plugin *>(plugin.get())};
         BOOST_REQUIRE(ptr != nullptr);
         BOOST_REQUIRE(ptr == test);
         BOOST_CHECK(ptr->initialized());
     }
-    catch (const std::out_of_range&)
+    catch (const std::out_of_range &)
     {
         BOOST_FAIL("Failed to load plugin");
     }
@@ -162,7 +147,7 @@ BOOST_AUTO_TEST_CASE(plugin_loading_unloading)
         pm.get_plugin(test_plugin_name);
         BOOST_FAIL("Failed to unload plugin");
     }
-    catch (const std::out_of_range&)
+    catch (const std::out_of_range &)
     {
         // expected
     }
@@ -179,7 +164,7 @@ BOOST_AUTO_TEST_CASE(plugin_depending_conflicting)
     {
         pm.initialize_plugins();
     }
-    catch (const plasma::plugin::plugin_loading_exception&)
+    catch (const plasma::plugin::plugin_loading_exception &)
     {
         detected = true;
     }
@@ -190,7 +175,7 @@ BOOST_AUTO_TEST_CASE(plugin_depending_conflicting)
         pm.unload_plugin(conflicted_test_plugin_name);
         pm.initialize_plugins();
     }
-    catch (const plasma::plugin::plugin_loading_exception&)
+    catch (const plasma::plugin::plugin_loading_exception &)
     {
         detected = true;
     }
@@ -201,7 +186,7 @@ BOOST_AUTO_TEST_CASE(plugin_depending_conflicting)
         pm.register_plugin(new depended_test_plugin{});
         pm.initialize_plugins();
     }
-    catch (const plasma::plugin::plugin_loading_exception&)
+    catch (const plasma::plugin::plugin_loading_exception &)
     {
         detected = false;
     }

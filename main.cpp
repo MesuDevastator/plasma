@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,22 @@
  * SOFTWARE.
  */
 
-#include <cxx_detect.h>
 #include <csignal>
 #include <cstdlib>
-#include <iostream>
+#include <cxx_detect.h>
 #include <exception>
+#include <iostream>
 #include <memory>
+
 
 #include <boost/program_options.hpp>
 #include <fmt/format.h>
 
-#include <plasma/version.hpp>
 #include <plasma/log.hpp>
-#include <plasma/plugin/plugin_manager.hpp>
 #include <plasma/plasma_server.hpp>
+#include <plasma/plugin/plugin_manager.hpp>
+#include <plasma/version.hpp>
+
 
 #if CXX_OS_WINDOWS
 #include <windows.h>
@@ -41,42 +43,48 @@
 
 namespace
 {
-    auto plasma_logo{
-        R"(__________.__                                )""\n"
-        R"(\______   \  | _____    ______ _____ _____   )""\n"
-        R"( |     ___/  | \__  \  /  ___//     \\__  \  )""\n"
-        R"( |    |   |  |__/ __ \_\___ \|  Y Y  \/ __ \_)""\n"
-        R"( |____|   |____(____  /____  >__|_|  (____  /)""\n"
-        R"(                    \/     \/      \/     \/ )""\n" };
-    std::unique_ptr<plasma::plugin::plugin_manager> manager;
-    std::thread server_thread;  // using a separate thread so that plasma_server is destructed normally (std::shared_ptr is destructed normally)
+auto plasma_logo{R"(__________.__                                )"
+                 "\n"
+                 R"(\______   \  | _____    ______ _____ _____   )"
+                 "\n"
+                 R"( |     ___/  | \__  \  /  ___//     \\__  \  )"
+                 "\n"
+                 R"( |    |   |  |__/ __ \_\___ \|  Y Y  \/ __ \_)"
+                 "\n"
+                 R"( |____|   |____(____  /____  >__|_|  (____  /)"
+                 "\n"
+                 R"(                    \/     \/      \/     \/ )"
+                 "\n"};
+std::unique_ptr<plasma::plugin::plugin_manager> manager;
+std::thread server_thread; // using a separate thread so that plasma_server is destructed normally (std::shared_ptr is
+                           // destructed normally)
 
 #if CXX_OS_WINDOWS
-    bool enable_ansi_support() noexcept
-    {
-        const auto out{ GetStdHandle(STD_OUTPUT_HANDLE) };
-        if (out == INVALID_HANDLE_VALUE)
-        {
-            return false;
-        }
-        DWORD mode{};
-        if (!GetConsoleMode(out, &mode))
-        {
-            return false;
-        }
-        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        if (!SetConsoleMode(out, mode))
-        {
-            return false;
-        }
-        return true;
-    }
-#endif
-}
-
-int main(const int argc, const char* argv[])
+bool enable_ansi_support() noexcept
 {
-    using namespace std::chrono_literals;
+    const auto out{GetStdHandle(STD_OUTPUT_HANDLE)};
+    if (out == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+    DWORD mode{};
+    if (!GetConsoleMode(out, &mode))
+    {
+        return false;
+    }
+    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(out, mode))
+    {
+        return false;
+    }
+    return true;
+}
+#endif
+} // namespace
+
+int main(const int argc, const char *argv[])
+{
+    using namespace std::literals;
 #if CXX_OS_WINDOWS
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
@@ -91,16 +99,16 @@ int main(const int argc, const char* argv[])
     if (!enable_ansi_support())
     {
         plasma::log::color_enabled = false;
-        WRN(lg) << "Failed to enable ANSI escape sequence support, colored logging is disabled";
+        PLASMA_LOG(lg, warning) << "Failed to enable ANSI escape sequence support, colored logging is disabled";
     }
     else
     {
-        TRC(lg) << "Enabled ANSI escape sequence support";
+        PLASMA_LOG(lg, trace) << "Enabled ANSI escape sequence support";
     }
 #endif
-    TRC(lg) << "Logging system initialized";
+    PLASMA_LOG(lg, trace) << "Logging system initialized";
 
-    INF(lg) << plasma::full_version;
+    PLASMA_LOG(lg, info) << plasma::full_version;
 
     {
         std::stringstream ss{};
@@ -108,23 +116,20 @@ int main(const int argc, const char* argv[])
         {
             ss << fmt::format("[{}]:\"{}\" ", i, argv[i]);
         }
-        DBG(lg) << "Console argument: " << ss.str();
+        PLASMA_LOG(lg, debug) << "Console argument: " << ss.str();
     }
-    boost::program_options::options_description desc{ "Plasma Usage" };
-    desc.add_options()
-        ("help", "Show the help")
-        ("version", "Show the version only")
-        ("init", "Initialize configurations only")
-        ("color", "Enable colored logging");
+    boost::program_options::options_description desc{"Plasma Usage"};
+    desc.add_options()("help", "Show the help")("version", "Show the version only")(
+        "init", "Initialize configurations only")("color", "Enable colored logging");
     boost::program_options::variables_map vm{};
     try
     {
         store(boost::program_options::parse_command_line(argc, argv, desc), vm);
         notify(vm);
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
-        FTL(lg) << "Failed to parse command line: " << e.what();
+        PLASMA_LOG(lg, fatal) << "Failed to parse command line: " << e.what();
         return 1;
     }
 
@@ -140,35 +145,38 @@ int main(const int argc, const char* argv[])
     }
 
     manager = std::make_unique<plasma::plugin::plugin_manager>();
-    manager->register_plugin(new plasma::plasma_server{ vm });
+    manager->register_plugin(new plasma::plasma_server{vm});
     manager->initialize_plugins();
     if (vm.count("init"))
     {
-        INF(lg) << "Initialized configurations";
+        PLASMA_LOG(lg, info) << "Initialized configurations";
         return 0;
     }
-    std::atexit([]{
-        dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->stop();
+    std::atexit([] {
+        dynamic_cast<plasma::plasma_server *>(manager->get_plugin(plasma::plasma_server::name).get())->stop();
         server_thread.join();
     });
-    auto handler{
-        [](const int signal){
+    auto handler{[](const int signal) {
         if (signal == SIGINT)
         {
             logger lg{};
-            FTL(lg) << "Caught SIGINT, terminating...";
+            PLASMA_LOG(lg, fatal) << "Caught SIGINT, terminating...";
             std::exit(0);
         }
-    } };
+    }};
     if (std::signal(SIGINT, handler) == SIG_ERR)
     {
-        WRN(lg) << "Failed to set signal handler";
+        PLASMA_LOG(lg, warning) << "Failed to set signal handler";
     }
     else
     {
-        TRC(lg) << "Set signal handler";
+        PLASMA_LOG(lg, trace) << "Set signal handler";
     }
-    server_thread = std::thread{ []{ dynamic_cast<plasma::plasma_server*>(manager->get_plugin(plasma::plasma_server::name).get())->start(); } };
-    server_thread.join();
+    server_thread = std::thread{
+        [] { dynamic_cast<plasma::plasma_server *>(manager->get_plugin(plasma::plasma_server::name).get())->start(); }};
+    if (server_thread.joinable())
+    {
+        server_thread.join();
+    }
     return 0;
 }

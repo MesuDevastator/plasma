@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Mesu Devastator
+# Copyright (c) 2023-2025 Mesu Devastator
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ option(PLASMA_ALWAYS_TRACE "Use trace logging even in release builds" OFF)
 set(BUILD_SHARED_LIBS ON)
 set(YAML_CPP_INSTALL ON)
 set(MI_SECURE ON)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
@@ -123,6 +123,8 @@ foreach(dir ${__boost_libraries})
         endif()
     endif()
 endforeach()
+# Duct tape:
+set(BOOST_LIBRARIES ${BOOST_LIBRARIES} boost_stacktrace_addr2line boost_stacktrace_basic boost_stacktrace_noop)
 message(STATUS "Plasma version: ${RELEASE_VERSION} ${BRANCH_NAME}:${COMMIT_HASH}")
 configure_file(version.cpp.in version.cpp @ONLY)
 

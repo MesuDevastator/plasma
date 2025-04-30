@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Mesu Devastator
+ * Copyright (c) 2023-2025 Mesu Devastator
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,43 +22,73 @@
 
 #pragma once
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <plasma/networking/type/varint.hpp>
-#include <plasma/networking/type/connection_status.hpp>
 #include <plasma/extern.hpp>
+#include <plasma/networking/type/connection_status.hpp>
+#include <plasma/networking/type/varint.hpp>
 
 namespace plasma::networking
 {
-    class plasma_connection;
-    namespace type
-    {
-        class PLASMA_EXTERN packet
-        {
-        public:
-            const std::size_t head_length;
-            const std::size_t body_length;
-            const std::size_t total_length;
-            const std::int32_t packet_id;
-            // Whole packet data including head
-            const std::unique_ptr<std::byte[]> data;
-            packet(const std::size_t body_length, const std::int32_t packet_id, const std::byte* const body);
-            packet(const std::size_t head_length, const std::size_t body_length, const std::int32_t packet_id, const std::byte* const data);
-            packet(const packet& other);
-            void process(plasma::networking::plasma_connection& connection);
-
-            class PLASMA_EXTERN handshake_packet
-            {
-            public:
-                static constexpr const std::int32_t packet_id{ 0 };
-                std::int32_t protocol_version;
-                std::u8string server_address;
-                std::uint16_t server_port;
-                std::int32_t next_state;
-                static handshake_packet parse(const std::byte* const body, const std::size_t max_length);
-                packet create() const;
-            };
-        };
-    }
+class plasma_connection;
 }
+
+namespace plasma::networking::type
+{
+class PLASMA_EXTERN packet
+{
+  private:
+    std::unique_ptr<std::byte[]> data_;
+    std::span<std::byte> data_span_;
+    // Subspans
+    varint_ref length_;
+    varint_ref packet_id_;
+    std::span<std::byte> body_span_;
+
+  protected:
+    packet(std::unique_ptr<std::byte[]> data, std::span<std::byte> data_span, varint_ref length, varint_ref packet_id,
+           std::span<std::byte> body_span) noexcept;
+
+  public:
+    packet(const packet &other);
+
+    std::span<const std::byte> data() const noexcept
+    {
+        return data_span_;
+    }
+
+    std::span<std::byte> &data() noexcept
+    {
+        return data_span_;
+    }
+
+    template <typename Self> auto &length(this Self &&self) noexcept
+    {
+        return self.length_;
+    }
+
+    template <typename Self> auto &packet_id(this Self &&self) noexcept
+    {
+        return self.packet_id_;
+    }
+
+    std::span<const std::byte> body() const noexcept
+    {
+        return body_span_;
+    }
+
+    std::span<std::byte> &body() noexcept
+    {
+        return body_span_;
+    }
+
+    static std::unique_ptr<packet> parse(std::span<std::byte> body, std::int32_t packet_id, connection_status status);
+
+    virtual void process([[maybe_unused]] plasma_connection &connection)
+    {
+    }
+
+    virtual ~packet() noexcept = default;
+};
+} // namespace plasma::networking::type
